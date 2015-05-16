@@ -1,10 +1,10 @@
 # brail2gtfs
 Belgian railways GTFS scraper in PHP.
 
-There are a couple of scripts in the root folder. Run them in order. The scraped results will be in the dist folder.
+There are a couple of scripts in the scripts folder. Run them in order. The scraped results will be in the dist folder.
 
 ```bash
-php *.php
+php scripts/*.php
 ```
 
 Afterwards, go to the dist folder, and create a zip archive:
