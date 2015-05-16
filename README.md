@@ -1,5 +1,18 @@
-# brail2gtfs
-Belgian railways GTFS scraper in PHP.
+# NMBS/SNCB to GTFS scraper
+
+Scrapes the Belgian railways and generates a GTFS file for the current year.
+
+If you're unsure what GTFS is, check the explanation at http://gtfs.org.
+
+## Install
+
+We use the PHP package manager [composer](http://getcomposer.org). Make sure it's installed and then run from this directory:
+
+```bash
+composer install
+```
+
+## Generating the GTFS file
 
 There are a couple of scripts in the scripts folder. Run them in order. The scraped results will be in the dist folder.
 
