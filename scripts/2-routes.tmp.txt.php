@@ -37,18 +37,20 @@ function getData($serverData, $shortName){
 	$routes = array();
     $html = str_get_html($serverData);
 
-    $nodes = $html->getElementsByTagName('table')->children;
+    if(isset($html->getElementsByTagName('table')->children)) {
+	    $nodes = $html->getElementsByTagName('table')->children;
 
-    // First node is header, so skip
-    for($i=1; $i<count($nodes); $i++){
-        $node = $nodes[$i];
+	    // First node is header, so skip
+	    for($i=1; $i<count($nodes); $i++){
+	        $node = $nodes[$i];
 
-        $route_short_name = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+	        $route_short_name = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
 
-        // Filter out busses and others
-        if(substr($route_short_name,0,strlen($shortName)) == $shortName)
-        	array_push($routes, $route_short_name);
-    }            
+	        // Filter out busses and others
+	        if(substr($route_short_name,0,strlen($shortName)) == $shortName)
+	        	array_push($routes, $route_short_name);
+	    }
+    }          
 
     return $routes;
 }
