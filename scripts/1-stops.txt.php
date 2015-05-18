@@ -1,4 +1,10 @@
 <?php
+/**
+ * This script converts the iRail stations to the GTFS stops.txt file
+ * @author Brecht Van de Vyvere <brecht@iRail.be>
+ * @author Pieter Colpaert <pieter@iRail.be>
+ * @license MIT
+ */
 require 'vendor/autoload.php';
 
 use GuzzleHttp\Client;
@@ -43,5 +49,3 @@ for($i=0; $i<count($stops); $i++){
 	appendCSV($dist,$csv);
 	$csv = "";
 }
-
-

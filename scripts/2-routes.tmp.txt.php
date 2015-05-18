@@ -65,8 +65,8 @@ appendCSV($dist, $header);
 
 // Start date
 $start_date = '2015-01-01';
-// End date
-$end_date = '2015-12-31';
+// End date → See https://github.com/iRail/brail2gtfs/issues/8
+$end_date = '2015-12-14';
 
 // content CSV
 // loop all days between start_date and end_date
