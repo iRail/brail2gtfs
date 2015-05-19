@@ -14,12 +14,13 @@ $calendar_dates_file = "dist/calendar_dates.txt";
 $calendar_file = "dist/calendar.txt";
 //to be read:
 $tmp_routes_file = "dist/routes.tmp.txt";
-//TODO: read routes and decide whether to create a new trip or add it to the previous trip
 
 $route = "P8008";
 $day = "15.05.2015";
 
-// returns an array with the first element a string describing when the route runs, and the second element is a string which can be used for a following request to find the stop_times. The third part is the route long name
+/**
+ * Fetch Route fetches for a specific day an array of: a route object, a trip, a calendar, calendar dates, and stop times
+ */
 function fetchRoute ($route, $day) {
     $client = new Client();
     $url = "http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/en?vtModeTs=weekday&productClassFilter=69&clientType=ANDROID&androidversion=3.1.10%20(31397)&hcount=0&maxResults=50&clientSystem=Android21&date=" . $day ."&trainname=" . $route . "&clientDevice=Android%20SDK%20built%20for%20x86&htype=Android%20SDK%20built%20for%20x86&L=vs_json.vs_hap";
@@ -41,13 +42,17 @@ function fetchRoute ($route, $day) {
             "gtfs:agency" => "0",
             "gtfs:routeType" => "gtfs:Rail",
         ];
+        list ($trips, $calendar, $calendar_dates) = parseVTString($object->suggestions[0]->vt);
         
-        return [parseVTString($object->suggestions[0]->vt), $object->suggestions[0]->journParam, $route_entry];
+        $stop_times = fetchStopTimes($object->suggestions[0]->journParam);
+        
+        return [$route_entry, $trip, $calendar, $calendar_dates, $stop_times];
     } else {
         //TODO: log new issue... Something went terribly wrong  - using monolog?
     }
 }
 
+// 
 function parseVTString ($string) {
     //Example strings:
     // * 13. Apr until 11. Dec 2015 Mo - Fr; not 1., 14., 25. May, 21. Jul, 11. Nov
@@ -74,8 +79,12 @@ function parseVTString ($string) {
         $expressions_string = $expressions_string_array[$i];
         //detect "not" or "also"
     }
-
     
+}
+
+function fetchStopTimes ($queryString) {
+
+    return [];
 }
 
 
