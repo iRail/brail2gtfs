@@ -1,12 +1,13 @@
 <?php
 /**
  * This script converts takes the list of routes which has been collected in script 2-routes.tmp.php into routes, trips, calendar dates, calendar entries and stop_times
+ * 
+ * Example usage: var_dump(fetchRoute("P8008","15.05.2015"));
+ *
  * @author Brecht Van de Vyvere <brecht@iRail.be>
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
  */
-
-require '../vendor/autoload.php';
 
 use GuzzleHttp\Client;
 
@@ -28,11 +29,11 @@ function fetchRoute ($route, $day) {
     if (isset($object) && is_array($object->suggestions) && isset($object->suggestions[0])) {
         $route_entry = [
             "@id" => "http://irail.be/routes/NMBS/" . $route,
-            "@type" => "http://vocab.gtfs.org/terms#Route",
+            "@type" => "gtfs:Route",
             "gtfs:longName" => $object->suggestions[0]->dep . " - " . $object->suggestions[0]->arr,
             "gtfs:shortName" => $route,
             "gtfs:agency" => "0",
-            "gtfs:routeType" => "gtfs:Rail",
+            "gtfs:routeType" => "gtfs:Rail", //→ 2 according to GTFS/CSV spec
         ];
         
         list ($trip, $calendar, $calendar_dates) = parseVTString($object->suggestions[0]->vt);
@@ -53,27 +54,77 @@ function parseVTString ($string) {
     // * 13. Apr until 12. Jun 2015 Mo - Fr; not 1., 14., 25. May
     // * Mo - Fr, not 25. Dec, 1. Jan, 6. Apr, 1., 14., 25. May, 21. Jul, 11. Nov
     // * Sa, Su, not 24., 25. Jan, 7., 8. Feb; also 25. Dec, 1. Jan, 6. Apr, 1., 14., 25. May, 21. Jul, 11. Nov
-
-    // The format can be interpreted like a programming language (e.g., we could use php lime and write a BNF of this first)
-    // Strings / characters to parse:
-    // ; : denotes that a new expression is about to follow (such as not or also)
-    // , : denotes that the thing about to follow can be another day (weekday or specific date), possibly in the same month as the next value
-    // not : denotes that something belongs to calendar_dates
-    // also: denotes that something is exceptionally in it
-    // - : denotes a range between days of the week
-    // \d\d?\. Month until \d\d?\. Month Year : validity timestamp
     
     $trip = [];
-    $calendar = [];
     $calendar_dates = [];
+
+    //In the first step, we're going to make it ourself a bit easier: the format uses for weekdays: "Mo - Fr" and for weekend: "Sa, Su"
+    $string = str_replace("Mo - Fr","WW",$string); // workweek
+    $string = str_replace("Sa, Su","WE",$string); // weekend
     
-    // First, explode on ;
-    $expressions_string_array = explode(";",$string);
+    //We're going to make it ourselves even more easy by saying a ';' has no semantic difference from a ',', so we can make that the same character
+    $string = str_replace(";",",",$string);
     
+    // The format can now be interpreted like a programming language
+    // e.g., 13. Apr until 11. Dec 2015 WW, not 1., 14., 25. May, 21. Jul, 11. Nov
+    // Strings / characters to parse:
+    // "/^(.*?),(.*)/ → First part describes the calendar, last part describes the calendar_dates
+    // "/, ((not|also) )?(.*)/g" → all matches are calendar_dates
+    // In calendar:
+    //  → if Until → start date and end date
+    //  → if WW or WE → range only counts in the week or weekend, if nothing: always
+    // In calendar_dates:
+    //  → Until → create list of dates for which it counts
+    //  → ...
+    //
+    // There's a difficulty with the dates: months or years are only mentioned at the last item.
+    
+    // First, explode on ','
+    $expressions_string_array = explode(",",$string);
+    $calendar_string = array_shift($expressions_string_array);
+
+    //process calendar string
+    $monday = true; $tuesday = true; $wednesday = true; $thursday = true; $friday = true; $saturday = true; $sunday = true;
+    if (preg_match("/WE$/",$calendar_string)) {
+        $monday = false;
+        $tuesday = false;
+        $wednesday = false;
+        $thursday = false;
+        $friday = false;
+    } else if (preg_match("/WW$/",$calendar_string)) {
+        $saturday = false;
+        $sunday = false;
+    }
+    
+    //check if there's an until and parse the interval
+    $startDate = "15.12.2014";
+    $endDate = "15.12.2015";
+    if (preg_match("/(\d\d?)\. ([a-z]+ )?(\d\d\d\d )?until (\d\d?)\. ([a-z]+ )?(\d\d\d\d )?/i",$calendar_string, $matches)) {
+        //Todo: parse time and put in startDate and endDate
+        //var_dump($matches);
+    }
+    
+    $calendar = [
+        "@id" => "route + occurence",
+        "@type" => "gtfs:CalendarRule",
+        "gtfs:monday" => $monday,
+        "gtfs:tuesday" => $tuesday,
+        "gtfs:wednesday" => $wednesday,
+        "gtfs:thursday" => $thursday,
+        "gtfs:friday" => $friday,
+        "gtfs:saturday" => $saturday,
+        "gtfs:sunday" => $sunday,
+        "gtfs:startDate" => $startDate, //these gtfs properties don't exist yet, but are going to be added
+        "gtfs:endDate" => $endDate
+    ];
+    //process the rest
     for ($i = 0; $i < sizeof($expressions_string_array); $i ++) {
         $expressions_string = $expressions_string_array[$i];
         //detect "not" or "also", these are calendar_dates
-        
+        if (preg_match("/^\s?(not|also)\s(.*)/", $expressions_string)) {
+            //todo
+            //$calendar_dates = array_merge($calendar_dates, parseCalendarDates());
+        }
     }
 
     return [$trip, $calendar, $calendar_dates];    
@@ -99,5 +150,3 @@ function fetchStopTimes ($queryString) {
 
     return [];
 }
-
-var_dump(fetchRoute("P8008","15.05.2015"));
