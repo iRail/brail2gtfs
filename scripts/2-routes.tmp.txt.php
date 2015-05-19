@@ -1,4 +1,10 @@
 <?php
+/**
+ * This script fetches all the routes from the NMBS and searches for the specific dates they roll
+ * @author Brecht Van de Vyvere <brecht@iRail.be>
+ * @author Pieter Colpaert <pieter@iRail.be>
+ * @license MIT
+ */
 
 $dist = "dist/routes.tmp.txt";
 
