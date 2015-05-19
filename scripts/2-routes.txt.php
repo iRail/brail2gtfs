@@ -10,7 +10,7 @@ require 'vendor/autoload.php';
 
 use GuzzleHttp\Client;
 
-$dist = "dist/routes2.txt";
+$dist = "dist/routes.txt";
 
 ini_set('memory_limit', '512M');
 ini_set('max_execution_time', '180');
