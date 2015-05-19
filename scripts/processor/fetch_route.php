@@ -5,18 +5,10 @@
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
  */
-require 'vendor/autoload.php';
+
+require '../vendor/autoload.php';
 
 use GuzzleHttp\Client;
-
-$trips_file = "dist/trips.txt";
-$calendar_dates_file = "dist/calendar_dates.txt";
-$calendar_file = "dist/calendar.txt";
-//to be read:
-$tmp_routes_file = "dist/routes.tmp.txt";
-
-$route = "P8008";
-$day = "15.05.2015";
 
 /**
  * Fetch Route fetches for a specific day an array of: a route object, a trip, a calendar, calendar dates, and stop times
@@ -42,7 +34,8 @@ function fetchRoute ($route, $day) {
             "gtfs:agency" => "0",
             "gtfs:routeType" => "gtfs:Rail",
         ];
-        list ($trips, $calendar, $calendar_dates) = parseVTString($object->suggestions[0]->vt);
+        
+        list ($trip, $calendar, $calendar_dates) = parseVTString($object->suggestions[0]->vt);
         
         $stop_times = fetchStopTimes($object->suggestions[0]->journParam);
         
@@ -69,25 +62,42 @@ function parseVTString ($string) {
     // also: denotes that something is exceptionally in it
     // - : denotes a range between days of the week
     // \d\d?\. Month until \d\d?\. Month Year : validity timestamp
-
-    // First, explode on ;
-    $result = [];
     
+    $trip = [];
+    $calendar = [];
+    $calendar_dates = [];
+    
+    // First, explode on ;
     $expressions_string_array = explode(";",$string);
     
     for ($i = 0; $i < sizeof($expressions_string_array); $i ++) {
         $expressions_string = $expressions_string_array[$i];
-        //detect "not" or "also"
+        //detect "not" or "also", these are calendar_dates
+        
     }
-    
+
+    return [$trip, $calendar, $calendar_dates];    
 }
+
+
+function parseInterval ($string1, $string2, $year, $month) {
+
+}
+
+
+function parseDate ($string, $year, $month){
+
+}
+
+
+function parseCalendarDates() {
+
+}
+
 
 function fetchStopTimes ($queryString) {
 
     return [];
 }
 
-
-var_dump(fetchRoute($route,$day));
-
-
+var_dump(fetchRoute("P8008","15.05.2015"));
