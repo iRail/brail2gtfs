@@ -10,7 +10,7 @@ require 'vendor/autoload.php';
 
 use GuzzleHttp\Client;
 
-$dist = "dist/routes.txt";
+$dist = "dist/routes2.txt";
 
 ini_set('memory_limit', '512M');
 ini_set('max_execution_time', '180');
@@ -79,7 +79,12 @@ function getRouteInfo($day, $month, $fullyear, $shortName) {
 }
 
 // Returns a long name [departureStation - arriveStation] of a route
-function getRouteLongName($day, $month, $fullyear, $shortName) {
+function getRouteLongName($shortName) {
+	// today
+	$day = getDate()["mday"];
+	$month = getDate()["mon"];
+	$fullyear = getDate()["year"];
+
 	$route_info = getRouteInfo($day, $month, $fullyear, $shortName);
 
 	if($route_info != NULL)
@@ -98,12 +103,7 @@ function appendCSV($dist, $csv) {
 $header = "route_id, agency_id, route_short_name, route_long_name,route_type";
 appendCSV($dist, $header);
 
-// content
-// today
-$day = getDate()["mday"];
-$month = getDate()["mon"];
-$fullyear = getDate()["year"];
-
+// content CSV
 $route_short_names = getDistinctRouteShortNames();
 
 $csv = "";
@@ -112,7 +112,7 @@ foreach ($route_short_names as $route_short_name) {
 	$csv .= "http://irail.be/routes/NMBS/" . $route_short_name . ",";
 	$csv .= "0" . ","; // agency_id is always 0
 	$csv .= $route_short_name . ",";
-	$csv .= getRouteLongName($day, $month, $fullyear, $route_short_name) . ",";
+	$csv .= getRouteLongName($route_short_name) . ",";
 	$csv .= "2"; // route_type is always 2
 
 	appendCSV($dist,$csv);
