@@ -5,7 +5,8 @@
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
  */
-include("scripts/processor/fetch_route.php");
+require("vendor/autoload.php");
+use iRail\brail2gtfs\RouteFetcher;
 
 $file_routes = "dist/routes.txt";
 $file_trips = "dist/trips.txt";
@@ -76,8 +77,8 @@ function addCalendar($calendar) {
 	$csv .= $calendar["gtfs:friday"] . ","; // friday
 	$csv .= $calendar["gtfs:saturday"] . ","; // saturday
 	$csv .= $calendar["gtfs:sunday"] . ","; // sunday
-	$csv .= $calendar["gtfs:startTime"] . ","; // start_date
-	$csv .= $calendar["gtfs:endTime"]; // end_date
+	$csv .= $calendar["gtfs:startDate"] . ","; // start_date
+	$csv .= $calendar["gtfs:endDate"]; // end_date
 
 	global $file_calendar;
 	appendCSV($file_calendar,$csv);
@@ -183,26 +184,33 @@ foreach ($hashmap_route_dates as $route_short_name => $dates) {
 		$date = array_shift($dates);
 
 		// processor
-		$route = fetchRoute($route_short_name, $date);
-		$route_entry = $route[0];
-		$trip = $route[1];
-		$calendar = $route[2];
-		$calendar_dates = $route[3];
-		$stop_times = $route[4];
+		list($route, $trips, $calendars, $calendar_dates_array, $stop_times_array) = RouteFetcher::fetchRoute($route_short_name, $date);
 
 		// content CSVs
-		addRoute($route_entry);
+		addRoute($route);
 
-		addTrip($trip);
+        foreach ($trips as $trip) {
+            addTrip($trip);
+        }
+        
+        foreach ($calendars as $calendar) {
+            addCalendar($calendar);
+        }
+        
+        foreach ($calendar_dates_array as $calendar_dates) {
+            addCalendarDates($calendar_dates);
+        }
 
-		addCalendar($calendar);
-
-		addCalendarDates($calendar_dates);
-
-		addStopTimes($stop_times);
+        foreach ($stop_times_array as $stop_times) {
+            addStopTimes($stop_times);
+        }
 
 		// delete dates from $dates with same calendar and calendar_dates
-		foreach($dates as $date)
-			if(checkCalendar($calendar, $date) || checkCalendarDates($calendar_dates, $date)) unset($date);
+		foreach ($dates as $date) {
+			if (checkCalendar($calendar, $date) || checkCalendarDates($calendar_dates, $date)) {
+                unset($date);
+            }
+        }
+        
 	}
 }

@@ -3,7 +3,13 @@
     "description": "Creates a GTFS for the Belgian Railway company",
     "require": {
         "guzzlehttp/guzzle": "~5.0",
-        "monolog/monolog": "1.0.*"
+        "monolog/monolog": "1.0.*",
+        "jms/parser-lib": "~1.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "iRail\\": "src/"
+        }
     },
     "license": "MIT",
     "authors": [
