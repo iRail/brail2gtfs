@@ -7,10 +7,10 @@
  */
 
 $file_calendar_dates = "dist/calendar_dates.txt";
-$file_splitted_routes = "dist/routes_splitted.txt";
+$file_routes_info_tmp = "dist/routes_info.tmp.txt";
 
 // ICE and ICT trains are included in search-results IC
-$shortNames = array("IC", "L", "P", "TGV", "THA");
+$shortNames = array("IC", "L", "P", "TGV", "THA", "TRN");
 
 // Hashmap: route_id => array(service_id, VTString)-pairs
 // This way we can generate a new service_id if a route has a different VTString, so another service
@@ -50,44 +50,133 @@ function getServerData($date, $shortName) {
 function getData($serverData, $date, $shortName) {
 	include_once ("includes/simple_html_dom.php");
 
-	// Trains that split have twice route_short_name in the list
-	// The second route_short_name needs to be investigated later on
-	$previous_route_short_name = "";
-
     $html = str_get_html($serverData);
+    $previous_route_short_name = "";
+	$previous_destination = "";
 
     if (isset($html->getElementsByTagName('table')->children)) {
 	    $nodes = $html->getElementsByTagName('table')->children;
 
-	    // First node is header, so skip
-	    for ($i=1; $i<count($nodes); $i++){
-	        $node = $nodes[$i];
+	    array_shift($nodes); // First node is header, so skip
+	    while (count($nodes) > 0) {
+	        $node = array_shift($nodes);
 	        $route_info = array();
 
 	        $route_short_name = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
-			$VTString = array_shift($node->children[4]->nodes[0]->{"_"});
+	        $destination = array_shift($node->children[2]->nodes[0]->_);
+			$VTString = array_shift($node->children[4]->nodes[0]->_);
+			$url = array_shift($node->children[0]->children[0]->{'attr'});
+          	// $url = "http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/traininfo.exe/nn/640500/213578/830000/201500/80?AjaxMap=CPTVMap&amp;date=31.12.2014&trainname=IC&date=01%2F01%2F15&backLink=ts&amp;";
+			$url = "http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/traininfo.exe/en/905892/306629/612344/4208/80?AjaxMap=CPTVMap&date=16.07.2015&trainname=IC&date=16%2F07%2F15&backLink=ts&";
+			// Next node. Needed for splitted trains
+			if(count($nodes) > 0) {
+				$next_node = array_shift($nodes);
+				$next_route_short_name = preg_replace('/\s+/', '',$next_node->children[0]->children[0]->children[0]->attr{"alt"});
+		        $next_destination = array_shift($next_node->children[2]->nodes[0]->{"_"});
+				$next_VTString = array_shift($next_node->children[4]->nodes[0]->{"_"});
+			} else {
+				// Last one
+				// make next from the previous to keep our code
+				$next_route_short_name = $previous_route_short_name;
+				$next_destination = $previous_destination;
+			}
+
+       		$drives = true;
 
 	        // Filter out busses and others
 	        if (substr($route_short_name,0,strlen($shortName)) == $shortName) {
-	        	// Route splits
-	        	if ($route_short_name == $previous_route_short_name) {
+	        	// Route splits: two different destinations
+	        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
 	        		// route is split in two routes
-	        		// The route_short_name of the splitted part can't be found in the list
-	        		// Needs to be parsed from the link
-	        		// $url = preg_replace(pattern, replacement, subject)
-					// $csv = "";
-	        		// $csv .= $route_short_name . ",";
-	        		// $csv .= $url;
-	        		// appendCSV($file_routes_tmp,$csv);
-					// $csv = "";
-	        	} else {
-	        		checkServiceId($route_short_name, $date, $VTString);
-	        		
-	        		$previous_route_short_name = $route_short_name;
+	        		// First check if this route is really driving this day (bug in NMBS website)
+	        		if (drives($url)) {
+	        			// Check if this train splits by searching for other route_id
+	        			// If not found, this is the main train
+		        		$split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
+		        		if ($split_route_short_name != NULL) {
+		        			// E.g. IC 1528 -> IC 1628 to Blankenberge
+		        			$route_short_name = $split_route_short_name;
+		        		}
+	        		} else {
+	        			$drives = false;
+	        		}
 	        	}
 	        }
+
+	        if ($drives) {
+    			checkServiceId($route_short_name, $date, $VTString);
+        	}
+
+			$previous_route_short_name = $route_short_name;
+			$previous_destination = $destination;
 	    }
     }          
+}
+
+function drives($url) {
+	$request_options = array(
+            "timeout" => "30",
+            "useragent" => "iRail.be by Project iRail",
+            );
+	
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
+    curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+    $result = curl_exec($ch);
+    curl_close ($ch);
+
+    $html = str_get_html($result);
+    $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
+
+    return is_object($test);
+}
+
+function parseSplittedRoute($url) {
+	$request_options = array(
+            "timeout" => "30",
+            "useragent" => "iRail.be by Project iRail",
+            );
+	
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
+    curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+    $result = curl_exec($ch);
+    curl_close ($ch);
+
+    $html = str_get_html($result);
+    
+    $splitRouteId = getSplitTrainRouteId($html);
+    var_dump($splitRouteId);
+
+    return $splitRouteId;
+}
+
+function getSplitTrainRouteId($html) {
+	$nodes = $html->getElementById('tq_trainroute_content_table_alteAnsicht')->getElementByTagName('table')->children;
+
+	// First node is header, so skip
+	// Second node contains name of the original route_id 
+	$j = 0;
+	for($i=2; $i<count($nodes); $i++){
+		$node = $nodes[$i];
+		if(!count($node->attr)) continue; // row with no class-attribute contain no data
+
+		// Check Train-column if contains name of new route_id
+	    $splitRouteId = preg_replace('/\s+/', '', array_shift($node->children[4]->nodes[0]->{'_'}));
+		if ($splitRouteId == "&nbsp;") {
+			continue; // not found
+	    } else {
+			return $splitRouteId;
+	    }
+	}
+
+	return NULL; // No name for the splitted train
 }
 
 function checkServiceId($route_short_name, $date, $VTString) {
@@ -118,7 +207,10 @@ function checkServiceId($route_short_name, $date, $VTString) {
 	}
 
 	// Add to calendar_dates.txt
-	addCalendarDate($toAddServiceId, $date, $route_short_name);
+	addCalendarDate($toAddServiceId, $date, 1); // Exception_type: 1
+
+	// Add to route_info.tmp.txt
+	addRouteInfo($toAddServiceId, $date, $route_short_name);
 }
 
 function isVTStringAlreadyAdded($service_vtstring_array, $VTString) {
@@ -150,16 +242,26 @@ function getServiceId($route_short_name, $VTString) {
 	return NULL; // Something went wrong
 }
 
-function addCalendarDate($service_id, $date, $route_short_name) {
+function addCalendarDate($service_id, $date, $exception_type) {
 	global $file_calendar_dates;
 
 	$csv = "";
 	$csv .= $service_id . ",";
 	$csv .= $date . ",";
-	$csv .= $route_short_name . ","; // just for testing purposes
-	$csv .= 1; // We only add days when trains drive
+	$csv .= $exception_type; // We only add days when trains drive
 
 	appendCSV($file_calendar_dates,$csv);
+}
+
+function addRouteInfo($service_id, $date, $route_short_name) {
+	global $file_routes_info_tmp;
+
+	$csv = "";
+	$csv .= $route_short_name . ",";
+	$csv .= $service_id . ",";
+	$csv .= $date;
+
+	appendCSV($file_routes_info_tmp,$csv);
 }
 
 function appendCSV($dist, $csv) {
@@ -169,6 +271,9 @@ function appendCSV($dist, $csv) {
 // header CSV
 $header = "service_id,date,exception_type";
 appendCSV($file_calendar_dates, $header);
+
+$header = "route_short_name,service_id,date";
+appendCSV($file_routes_info_tmp, $header);
 
 // Start date
 $start_date = '01-01-2015';
