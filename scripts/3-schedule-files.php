@@ -1,6 +1,7 @@
 <?php
 /**
  * This script populates the following GTFS files: routes.txt, trips.txt, stop_times.txt
+ *
  * @author Brecht Van de Vyvere <brecht@iRail.be>
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
@@ -29,7 +30,7 @@ function getRoutesWithDates() {
 			$service_id = $line[1];
 			$date = $line[2];
 			
-			// Check if date with certain service_id has already been added
+			// Check if service_id has already been added
 			if (!checkForServiceId($hashmap[$route_short_name], $service_id) {
 				array_push($hashmap[$route_short_name], new array($date, $service_id));
 			}
@@ -59,6 +60,15 @@ function checkForServiceId($dateServiceIdPairs, $service_id) {
 	return $contains;
 }
 
+function generateTrip($shortName, $service_id, $trip_id) {
+	$trip_template = [
+        "@id" => $trip_id, //Sadly, this is only a local identifier
+        "@type" => "gtfs:Trip",
+        "gtfs:route" => "http://irail.be/routes/NMBS/" . $shortName,
+        "gtfs:service" => $service_id, //Sadly, this is only a local identifier, and we use the same id as the trip for service rules
+    ];
+}
+
 function appendCSV($dist, $csv) {
 	file_put_contents($dist, trim($csv).PHP_EOL, FILE_APPEND);
 }
@@ -79,7 +89,7 @@ function addTrip($trip) {
 	$csv = "";
 	$csv .= $trip["gtfs:route"] . ","; // route_id
 	$csv .= $trip["gtfs:service"] . ","; // service_id
-	$csv .= $trip["gtfs:trip"]; // trip_id
+	$csv .= $trip["@id"]; // trip_id
 
 	global $file_trips;
 	appendCSV($file_trips,$csv);
@@ -118,25 +128,34 @@ function makeHeaders() {
 // header CSVs
 makeHeaders();
 
-$hashmap_route_dates = getRoutesWithDates();
+$hashmap_route_serviceAndDate = getRoutesWithDates();
 
-foreach ($hashmap_route_dates as $route_short_name => $dates_serviceId_pairs) {
+foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_pairs) {
 
-	while(count($dates)) {
-		$date = array_shift($dates);
+	while (count($dates_serviceId_pairs) > 0) {
+		$date_service_pair = array_shift($dates_serviceId_pairs);
+		$date = $date_service_pair[0];
+		$service_id = $date_service_pair[1];
+
+		// 1 - 1 mapping
+		$trip_id = $service_id;
 
 		// processor
-		list($route, $trips, $stop_times_array) = RouteFetcher::fetchRoute($route_short_name, $date);
+		list($route, $stop_times) = RouteFetcher::fetchRouteAndStopTimes($route_short_name, $date, $trip_id);
 
 		// content CSVs
-		addRoute($route);
+		// routes.txt
+		if ($route != null) {
+			addRoute($route);
+		}
 
-        foreach ($trips as $trip) {
-            addTrip($trip);
-        }
-
-        foreach ($stop_times_array as $stop_times) {
-            addStopTimes($stop_times);
+		// trips.txt
+		$trip = generateTrip($route_short_name, $service_id, $trip_id);
+        addTrip($trip);
+    	
+    	// stop_times.txt
+    	if ($stop_times != null) {
+        	addStopTimes($stop_times);
         }
 	}
 }
