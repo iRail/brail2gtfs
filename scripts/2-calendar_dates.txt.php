@@ -1,6 +1,7 @@
 <?php
 /**
  * This script fetches all the routes from the NMBS and generates calendar_dates for the specific dates they roll
+ *
  * @author Brecht Van de Vyvere <brecht@iRail.be>
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
@@ -21,7 +22,7 @@ $service_id = 0; // Counter
 
 date_default_timezone_set('UTC');
 
-// Scrapes the Belgian Rail website
+// Scrapes list of routes of the Belgian Rail website
 function getServerData($date, $shortName) {
 	$request_options = array(
             "timeout" => "30",
@@ -66,8 +67,7 @@ function getData($serverData, $date, $shortName) {
 	        $destination = array_shift($node->children[2]->nodes[0]->_);
 			$VTString = array_shift($node->children[4]->nodes[0]->_);
 			$url = array_shift($node->children[0]->children[0]->{'attr'});
-          	// $url = "http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/traininfo.exe/nn/640500/213578/830000/201500/80?AjaxMap=CPTVMap&amp;date=31.12.2014&trainname=IC&date=01%2F01%2F15&backLink=ts&amp;";
-			$url = "http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/traininfo.exe/en/905892/306629/612344/4208/80?AjaxMap=CPTVMap&date=16.07.2015&trainname=IC&date=16%2F07%2F15&backLink=ts&";
+
 			// Next node. Needed for splitted trains
 			if(count($nodes) > 0) {
 				$next_node = array_shift($nodes);
@@ -113,6 +113,7 @@ function getData($serverData, $date, $shortName) {
     }          
 }
 
+// Scrapes one route
 function drives($url) {
 	$request_options = array(
             "timeout" => "30",
