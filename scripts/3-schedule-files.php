@@ -14,6 +14,10 @@ $file_routes = "dist/routes.txt";
 $file_trips = "dist/trips.txt";
 $file_stop_times = "dist/stop_times.txt";
 
+$language = "nn"; // Dutch
+// $language = "fr"; // French
+// $language = "en"; // English
+
 // Returns hashmap. Key: route_id - Value: array of dates with a distinct service_id
 function getRoutesWithDates() {
 	$hashmap = array(); // holds route_short_name => array of dates
@@ -30,9 +34,14 @@ function getRoutesWithDates() {
 			$service_id = $line[1];
 			$date = $line[2];
 			
+			if (!isset($hashmap[$route_short_name])) {
+					$hashmap[$route_short_name] = array();
+			}
+
 			// Check if service_id has already been added
-			if (!checkForServiceId($hashmap[$route_short_name], $service_id) {
-				array_push($hashmap[$route_short_name], new array($date, $service_id));
+			if (!checkForServiceId($hashmap[$route_short_name], $service_id)) {
+				$pair = array($date, $service_id);
+				array_push($hashmap[$route_short_name], $pair);
 			}
 
 	        // I don't know if this is really necessary, but it couldn't harm;
@@ -61,12 +70,14 @@ function checkForServiceId($dateServiceIdPairs, $service_id) {
 }
 
 function generateTrip($shortName, $service_id, $trip_id) {
-	$trip_template = [
+	$trip_entry = [
         "@id" => $trip_id, //Sadly, this is only a local identifier
         "@type" => "gtfs:Trip",
         "gtfs:route" => "http://irail.be/routes/NMBS/" . $shortName,
         "gtfs:service" => $service_id, //Sadly, this is only a local identifier, and we use the same id as the trip for service rules
     ];
+
+    return $trip_entry;
 }
 
 function appendCSV($dist, $csv) {
@@ -132,6 +143,7 @@ $hashmap_route_serviceAndDate = getRoutesWithDates();
 
 foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_pairs) {
 
+	$routeAdded = false; // Route needs to be added just once
 	while (count($dates_serviceId_pairs) > 0) {
 		$date_service_pair = array_shift($dates_serviceId_pairs);
 		$date = $date_service_pair[0];
@@ -141,12 +153,13 @@ foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_
 		$trip_id = $service_id;
 
 		// processor
-		list($route, $stop_times) = RouteFetcher::fetchRouteAndStopTimes($route_short_name, $date, $trip_id);
+		list($route, $stop_times) = RouteFetcher::fetchRouteAndStopTimes($route_short_name, $date, $trip_id, $language);
 
 		// content CSVs
 		// routes.txt
-		if ($route != null) {
+		if (!$routeAdded && $route != null) {
 			addRoute($route);
+			$routeAdded = true;
 		}
 
 		// trips.txt
@@ -155,7 +168,7 @@ foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_
     	
     	// stop_times.txt
     	if ($stop_times != null) {
-        	addStopTimes($stop_times);
+        	// addStopTimes($stop_times);
         }
 	}
 }
