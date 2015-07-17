@@ -24,6 +24,8 @@ class RouteFetcher {
         date_default_timezone_set('UTC');
 
         $dateNMBS = date_create_from_format('Ymd', $date)->format('d/m/Y');
+        // $dateNMBS = '01/01/2015';
+        // $shortName = 'IC610';
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
         list($route_entry, $stop_times) = self::fetchInfo($serverData, $shortName, $trip_id, $dateNMBS);
@@ -32,6 +34,9 @@ class RouteFetcher {
     }
 
     static function fetchInfo($serverData, $shortName, $trip_id, $date) {
+        var_dump($shortName);
+        var_dump($date);
+
         // create a log channel
         $log = new Logger('route_info');
         $log->pushHandler(new StreamHandler('route_info.log', Logger::ERROR));
@@ -53,17 +58,24 @@ class RouteFetcher {
             $route_entry = array();
 
             // First node is just the header
-            for($i=1; $i<count($nodes); $i++){
+            $i = 1; // Pointer to node
+            while (count($nodes) > $i) {
                 $node = $nodes[$i];
-                if(!count($node->attr)) continue; // row with no class-attribute contain no data
-                
+                if(!count($node->attr)) {
+                    $i++;
+                    continue; // row with no class-attribute contain no data
+                }
+
                 // Arrival- and departuretimes
                 // First stop
-                if ($i == 1) {
+                if ($stop_sequence == 1) {
                     // only departure
                     $departureTime = array_shift($node->children[1]->children[1]->nodes[0]->_);
                     $arrivalTime = "";
                     $departureStation = trim(array_shift($node->children[3]->nodes[0]->_));
+                    if ($departureStation == "") {
+                        $departureStation = array_shift($node->children[3]->children[0]->nodes[0]->_);
+                    }
                 } 
                 // Last stop
                 else if ($i == count($nodes)-1) {
@@ -74,13 +86,24 @@ class RouteFetcher {
                 } else {
                     $departureTime = array_shift($node->children[1]->children[0]->nodes[0]->_);
                     $arrivalTime = array_shift($node->children[1]->children[2]->nodes[0]->_);
-                    // Todo: station and platform
+                    $stop_name = trim(array_shift($node->children[3]->nodes[0]->_)); 
+
                     // Todo: Find stop_id with stop_name
+                }
+
+                // Has platform
+                if (count($node->children) > 5 && trim(array_shift($node->children[5]->nodes[0]->_)) != '&nbsp;') {
+                    $platform = trim(array_shift($node->children[5]->nodes[0]->_));
+                } else if (is_object($node->children[4])) {
+                    $platform = "";
+                } else {
+                    $platform = "";
                 }
 
                 // array_push($stopTimes, self::generateStopTimesEntry($trip_id, $arrival_time, $departure_time, $stop_id, $stop_sequence));
 
                 $stop_sequence++;
+                $i++;
             }
 
             $route_entry = self::generateRouteEntry($shortName, $departureStation, $arrivalStation);
