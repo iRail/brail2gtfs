@@ -168,7 +168,7 @@ foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_
     	
     	// stop_times.txt
     	if ($stop_times != null) {
-        	// addStopTimes($stop_times);
+        	addStopTimes($stop_times);
         }
 	}
 }
