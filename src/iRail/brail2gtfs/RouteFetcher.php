@@ -24,8 +24,8 @@ class RouteFetcher {
         date_default_timezone_set('UTC');
 
         $dateNMBS = date_create_from_format('Ymd', $date)->format('d/m/Y');
-        // $dateNMBS = '01/01/2015';
-        // $shortName = 'IC610';
+        // $dateNMBS = '17/07/2015';
+        // $shortName = 'ICE18';
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
         list($route_entry, $stop_times) = self::fetchInfo($serverData, $shortName, $trip_id, $dateNMBS);
@@ -86,10 +86,24 @@ class RouteFetcher {
                 } else {
                     $departureTime = array_shift($node->children[1]->children[0]->nodes[0]->_);
                     $arrivalTime = array_shift($node->children[1]->children[2]->nodes[0]->_);
-                    $stop_name = trim(array_shift($node->children[3]->nodes[0]->_)); 
-
-                    // Todo: Find stop_id with stop_name
                 }
+
+                // Stop_name
+                $stop_name = trim(array_shift($node->children[3]->nodes[0]->_)); 
+
+                // Stop_id
+                // Can be parsed from the stop-URL
+                if (isset($node->children[3]->children[0])) {
+                    $link = $node->children[3]->children[0]->{"attr"}["href"];
+                    $nr = substr($link, strpos($link, "StationId=") + strlen("StationId="));
+                    $nr = substr($nr, 0, strlen($nr) - 1); // delete ampersand on the end
+                    $stop_id = 'http://irail.be/stations/NMBS/' . '00' . $nr;
+                } else {
+                    // With foreign stations, there's a sometimes no URL available
+                    // Find the stop_id with the iRail/hyperrail API
+
+                    var_dump("stop id not found");
+                }                
 
                 // Has platform
                 if (count($node->children) > 5 && trim(array_shift($node->children[5]->nodes[0]->_)) != '&nbsp;') {
