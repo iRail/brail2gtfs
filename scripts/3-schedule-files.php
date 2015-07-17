@@ -150,7 +150,7 @@ foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_
 		$service_id = $date_service_pair[1];
 
 		// 1 - 1 mapping
-		$trip_id = $service_id;
+		$trip_id = $route_short_name . $service_id . '1';
 
 		// processor
 		list($route, $stop_times) = RouteFetcher::fetchRouteAndStopTimes($route_short_name, $date, $trip_id, $language);
