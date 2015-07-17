@@ -11,7 +11,7 @@ $file_calendar_dates = "dist/calendar_dates.txt";
 $file_routes_info_tmp = "dist/routes_info.tmp.txt";
 
 // ICE and ICT trains are included in search-results IC
-$shortNames = array("IC", "L", "P", "TGV", "THA", "TRN");
+$shortNames = array("IC", "L", "P", "TGV", "THA", "TRN", "EXT");
 
 // Hashmap: route_id => array(service_id, VTString)-pairs
 // This way we can generate a new service_id if a route has a different VTString, so another service
