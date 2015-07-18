@@ -49,9 +49,11 @@ class RouteFetcher {
         $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
         if (!is_object($test)) {
             // Trainroute splits. Route_id is of the main train, so take the first link
-            $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{"attr"});
-            $serverData = self::getServerDataByUrl($url);
-            list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
+            if (is_object($html->getElementByTagName('table'))) {
+                $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{"attr"});
+                $serverData = self::getServerDataByUrl($url);
+                list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
+            }
         } else {
 
             $nodes = $html->getElementById('tq_trainroute_content_table_alteAnsicht')->getElementByTagName('table')->children;
