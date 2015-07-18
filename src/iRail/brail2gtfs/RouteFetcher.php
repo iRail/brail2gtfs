@@ -48,7 +48,10 @@ class RouteFetcher {
 
         $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
         if (!is_object($test)) {
-            $log->addError('Error with fetching route: ' . $shortName . ' on ' . $date . "\n");
+            // Trainroute splits. Route_id is of the main train, so take the first link
+            $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{"attr"});
+            $serverData = self::getServerDataByUrl($url);
+            list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
         } else {
 
             $nodes = $html->getElementById('tq_trainroute_content_table_alteAnsicht')->getElementByTagName('table')->children;
@@ -108,7 +111,12 @@ class RouteFetcher {
                 // Can be parsed from the stop-URL
                 if (isset($node->children[3]->children[0])) {
                     $link = $node->children[3]->children[0]->{"attr"}["href"];
-                    $nr = substr($link, strpos($link, "StationId=") + strlen("StationId="));
+                    // With capital C
+                    if (strpos($link, "StationId=")) {
+                        $nr = substr($link, strpos($link, "StationId=") + strlen("StationId="));
+                    } else {
+                        $nr = substr($link, strpos($link, "stationId=") + strlen("stationId="));
+                    }
                     $nr = substr($nr, 0, strlen($nr) - 1); // delete ampersand on the end
                     $stop_id = 'http://irail.be/stations/NMBS/' . '00' . $nr;
                 } else {
@@ -119,7 +127,7 @@ class RouteFetcher {
                     }
 
                     $matches = self::getMatches($stations, $stop_name);
-                    $stop_id = self::getBestMatch($matches, $stop_name, $language);
+                    $stop_id = self::getBestMatchId($matches, $stop_name, $language);
                 }                
 
                 // Has platform
@@ -141,6 +149,34 @@ class RouteFetcher {
         }
 
         return [$route_entry, $stopTimes];
+    }
+
+    // Gets called when route is split
+    static function hasDifferentDestination($serverData) {
+        $html = str_get_html($serverData);
+
+        if (isset($html->getElementsByTagName('table')->children)) {
+            $nodes = $html->getElementsByTagName('table')->children;
+
+            $node_one = array_shift($nodes);
+            $node_two = array_shift($nodes);
+
+            // 
+            $route_short_name_one = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+            $destination_one = array_shift($node->children[2]->nodes[0]->_);
+            $url_one = array_shift($node->children[0]->children[0]->{'attr'});
+
+            $route_short_name_two = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+            $destination_two = array_shift($node->children[2]->nodes[0]->_);
+            $url_two = array_shift($node->children[0]->children[0]->{'attr'});
+            } else {
+                // Last one
+                // make next from the previous to keep our code
+                $next_route_short_name = $previous_route_short_name;
+                $next_destination = $previous_destination;
+            }
+
+            $drives = true;
     }
 
     static function generateRouteEntry($shortName, $departureStation, $arrivalStation) {
@@ -194,6 +230,25 @@ class RouteFetcher {
         return $result;
     }
 
+    static function getServerDataByUrl($scrapeURL) {
+        $request_options = array(
+            "timeout" => "30",
+            "useragent" => "GTFS by Project iRail",
+        );
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $scrapeURL);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+        $result = curl_exec($ch);
+
+        curl_close ($ch);
+
+        return $result;
+    }
+
     static function getStations() {
         $client = new Client();
         $url = "https://irail.be/stations/NMBS";
@@ -213,8 +268,12 @@ class RouteFetcher {
         // Hardcoded some stations that NMBS gives different names to
         if ($query == 'Frankfurt Main (d)') {
             $query = 'Frankfurt am Main Flughafen';
-        } else if ($query = 'Frankfurt Flugh (d)') {
+        } else if ($query == 'Frankfurt Flugh (d)') {
             $query = 'Frankfurt am Main Hbf';
+        } else if ($query == 'Ettelbruck (l)') {
+            $query = 'Ettelbréck';
+        } else if ($query == 'Kautenbach (l)') {
+            $query = 'Kautebaach';
         }
 
         // var_dump($stations);
@@ -297,11 +356,10 @@ class RouteFetcher {
         return strtr($str, $unwanted_array);
     }
 
-    static function getBestMatch($matches, $stop_name, $language) {
-        $i = 0; // Index to best match in the graph
+    static function getBestMatchId($matches, $stop_name, $language) {
         $max_percent = 0; // Percentage of similarity of the best match
+        $stop_id = "";
 
-        $j = 0; // Index to match in the loop
         foreach ($matches->{"@graph"} as $match) {
             // First check if the stationname is available in the same language
             if (isset($match["alternative"])) {
@@ -317,14 +375,12 @@ class RouteFetcher {
 
             similar_text($stationName, $stop_name, $percent);
             if ($percent > $max_percent) {
-                $i = $j;
+                $stop_id =  $match["@id"];
                 $max_percent = $percent;
             }
-
-            $j++;
         }
-        
-        return $match["@id"];
+
+        return $stop_id;
     }
 
     static function getAlternativeName($stationsByLang, $language) {
