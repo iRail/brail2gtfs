@@ -24,7 +24,7 @@ class RouteFetcher {
         date_default_timezone_set('UTC');
 
         $dateNMBS = date_create_from_format('Ymd', $date)->format('d/m/Y');
-        
+
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
         list($route_entry, $stop_times) = self::fetchInfo($serverData, $shortName, $trip_id, $dateNMBS, $language);
@@ -37,8 +37,8 @@ class RouteFetcher {
         var_dump($date);
 
         // create a log channel
-        $log = new Logger('route_info');
-        $log->pushHandler(new StreamHandler('route_info.log', Logger::ERROR));
+        $log = new Logger('route_not_driving');
+        $log->pushHandler(new StreamHandler('route_not_driving.log', Logger::ERROR));
 
         $route_entry = null;
         $stopTimes = null;
@@ -48,11 +48,20 @@ class RouteFetcher {
 
         $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
         if (!is_object($test)) {
-            // Trainroute splits. Route_id is of the main train, so take the first link
+            // Trainroute splits. Route_id is of the main train, so take the link that drives
             if (is_object($html->getElementByTagName('table'))) {
                 $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{"attr"});
-                $serverData = self::getServerDataByUrl($url);
-                list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
+                if (self::drives($url)) {
+                    $serverData = self::getServerDataByUrl($url);
+                    list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
+                } else {
+                    // Second url
+                    $url = array_shift($html->getElementByTagName('table')->children[2]->children[0]->children[0]->{"attr"});
+                    $serverData = self::getServerDataByUrl($url);
+                    list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
+                }
+            } else {
+                $log->addError('Train not driving: ' . $shortName . ' on ' . $date . "\n");
             }
         } else {
 
@@ -151,6 +160,28 @@ class RouteFetcher {
         }
 
         return [$route_entry, $stopTimes];
+    }
+
+    // Scrapes one route
+    static function drives($url) {
+        $request_options = array(
+                "timeout" => "30",
+                "useragent" => "iRail.be by Project iRail",
+                );
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+        $result = curl_exec($ch);
+        curl_close ($ch);
+
+        $html = str_get_html($result);
+        $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
+
+        return is_object($test);
     }
 
     // Gets called when route is split
