@@ -307,6 +307,8 @@ class RouteFetcher {
             $query = 'Ettelbréck';
         } else if ($query == 'Kautenbach (l)') {
             $query = 'Kautebaach';
+        } else if ($query == 'Siegburg (d)') {
+            $query = 'Siegburg';
         }
 
         // var_dump($stations);
