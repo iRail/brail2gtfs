@@ -27,7 +27,7 @@ class RouteFetcher {
 
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
-        list($route_entry, $stop_times, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $dateNMBS, $dateGTFS, $language);
+        list($route_entry, $stop_times, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $dateNMBS, $date, $language);
         
         return [$route_entry, $stop_times, $serviceId_date_pair];
     }
