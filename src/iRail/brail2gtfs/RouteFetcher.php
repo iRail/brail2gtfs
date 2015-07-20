@@ -136,7 +136,6 @@ class RouteFetcher {
                     if ($stations == null) {
                         $stations = self::getStations();
                     }
-
                     $matches = self::getMatches($stations, $stop_name);
                     $stop_id = self::getBestMatchId($matches, $stop_name, $language);
                 }                
@@ -219,7 +218,7 @@ class RouteFetcher {
             "gtfs:longName" => $departureStation . " - " . $arrivalStation,
             "gtfs:shortName" => $shortName,
             "gtfs:agency" => "0",
-            "gtfs:routeType" => "gtfs:Rail" //→ 2 according to GTFS/CSV spec
+            "gtfs:routeType" => "2" //→ 2 according to GTFS/CSV spec
         ];
 
         return $route_entry;
@@ -307,8 +306,13 @@ class RouteFetcher {
             $query = 'Ettelbréck';
         } else if ($query == 'Kautenbach (l)') {
             $query = 'Kautebaach';
-        } else if ($query == 'Siegburg (d)') {
-            $query = 'Siegburg';
+        } else if ($query == 'Koln Hbf (d)') {
+            $query = 'Köln Hbf';
+        }
+
+        // Delete ('country-abbreviation') if present
+        if (strpos($query, '(') < strlen($query)) {
+            $query = substr($query, 0, strpos($query, '(') - 2);
         }
 
         // var_dump($stations);
