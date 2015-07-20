@@ -93,13 +93,15 @@ function makeCorrectCalendarDates($serviceId_date_pairs) {
 				$service_id_ = $line[0]; // $line is an array of the csv elements
 				$date_ = $line[1];
 				
+				$addOnce = true;
 				foreach ($serviceId_date_pairs as $service_id => $date) {
 					if ($service_id == $service_id_ && $date == $date_) {
 						// Delete from pairs
 						unset($serviceId_date_pairs[$service_id]);
-					} else {
+					} else if ($addOnce) {
 						// Write to new temporary CSV-file
 						fputcsv($handleWrite, $line);
+						$addOnce = false;
 					}
 				}
 			// Just write the rest
