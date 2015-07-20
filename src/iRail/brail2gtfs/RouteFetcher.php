@@ -140,8 +140,16 @@ class RouteFetcher {
                     if ($stations == null) {
                         $stations = self::getStations();
                     }
-                    $matches = self::getMatches($stations, $stop_name);
-                    $stop_id = self::getBestMatchId($matches, $stop_name, $language);
+                    ////////////// TEMPORARY TILL NEW STATIONS.CSV ONLINE
+                    if ($stop_name == 'Siegburg (d)') {
+                        $stop_id = 'http://irail.be/stations/NMBS/008015588';
+                    } else if ($stop_name == 'Limburg Sud (d)') {
+                        $stop_id = 'http://irail.be/stations/NMBS/008032572';
+                    } else {
+                    ///////////////////////////////////////////////////////
+                        $matches = self::getMatches($stations, $stop_name);
+                        $stop_id = self::getBestMatchId($matches, $stop_name, $language);
+                    }
                 }                
 
                 // Has platform
