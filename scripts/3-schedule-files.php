@@ -124,15 +124,15 @@ function makeHeaders() {
 	global $file_routes, $file_trips, $file_stop_times;
 
 	// routes.txt
-	$header = "route_id, agency_id, route_short_name, route_long_name,route_type";
+	$header = "route_id,agency_id,route_short_name,route_long_name,route_type";
 	appendCSV($file_routes, $header);
 
 	// trips.txt
-	$header = "route_id, service_id, trip_id";
+	$header = "route_id,service_id,trip_id";
 	appendCSV($file_trips, $header);
 
 	// stop_times.txt
-	$header = "trip_id, arrival_time, departure_time, stop_id, stop_sequence";
+	$header = "trip_id,arrival_time,departure_time,stop_id,stop_sequence";
 	appendCSV($file_stop_times, $header);
 }
 
