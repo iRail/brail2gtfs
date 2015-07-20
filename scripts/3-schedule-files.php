@@ -13,6 +13,8 @@ use iRail\brail2gtfs\RouteFetcher;
 $file_routes = "dist/routes.txt";
 $file_trips = "dist/trips.txt";
 $file_stop_times = "dist/stop_times.txt";
+$file_temp = 'dist/calendar_dates_temp.txt';
+$file_calendar_dates = "dist/calendar_dates.txt";
 
 $language = "nn"; // Dutch
 // $language = "fr"; // French
@@ -67,6 +69,60 @@ function checkForServiceId($dateServiceIdPairs, $service_id) {
 	}
 
 	return $contains;
+}
+
+// Some services don't drive so those have to be deleted from calendar_dates.txt
+// To do this, we generate a temporary file where we put all the services that drive
+function makeCorrectCalendarDates($serviceId_date_pairs) {
+	global $file_temp, $file_calendar_dates;
+
+	if(($handleRead = fopen($file_calendar_dates, 'r')) !== false && ($handleWrite = fopen($file_temp, 'w')) !== false)
+	{
+		// Header new calendar_dates.txt file
+		$header = "service_id,date,exception_type";
+		appendCSV($file_temp, $header);
+
+	    // get the first row, which contains the column-titles (if necessary)
+	    $header = fgetcsv($handleRead);
+
+	    // loop through the file line-by-line
+	    while(($line = fgetcsv($handleRead)) !== false)
+	    {
+    		// Not all pairs have been found
+	    	if (count($serviceId_date_pairs) > 0) {
+				$service_id_ = $line[0]; // $line is an array of the csv elements
+				$date_ = $line[1];
+				
+				foreach ($serviceId_date_pairs as $service_id => $date) {
+					if ($service_id == $service_id_ && $date == $date_) {
+						// Delete from pairs
+						unset($serviceId_date_pairs[$service_id]);
+					} else {
+						// Write to new temporary CSV-file
+						fputcsv($handleWrite, $line);
+					}
+				}
+			// Just write the rest
+			} else {
+				fputcsv($handleWrite, $line);
+			}
+
+	        // I don't know if this is really necessary, but it couldn't harm;
+	        // see also: http://php.net/manual/en/features.gc.php
+	        unset($line);
+	    }
+	    fclose($handleRead);
+	    fclose($handleWrite);
+
+	    // Delete old calendar_dates.txt
+	    if (unset($file_calendar_dates)) {
+	    	var_dump("Deleted calendar_dates.txt");
+	    }
+
+	    // Rename temporary file so we have a new calendar_dates.txt
+	    rename($file_temp, $file_calendar_dates);
+	    var_dump("New calendar_dates.txt is ready.");
+	}
 }
 
 function generateTrip($shortName, $service_id, $trip_id) {
@@ -140,6 +196,7 @@ function makeHeaders() {
 makeHeaders();
 
 $hashmap_route_serviceAndDate = getRoutesWithDates();
+$serviceId_date_pairs = array(); // All the trips don't drive go in here
 
 foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_pairs) {
 
@@ -153,7 +210,7 @@ foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_
 		$trip_id = $route_short_name . $service_id . '1';
 
 		// processor
-		list($route, $stop_times) = RouteFetcher::fetchRouteAndStopTimes($route_short_name, $date, $trip_id, $language);
+		list($route, $stop_times, $serviceId_date_pair) = RouteFetcher::fetchRouteAndStopTimes($route_short_name, $date, $trip_id, $service_id, $language);
 
 		// content CSVs
 		// routes.txt
@@ -170,5 +227,15 @@ foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_
     	if ($stop_times != null) {
         	addStopTimes($stop_times);
         }
+
+        // Add serviceId-date pair
+        if ($serviceId_date_pair != null) {
+        	array_push($serviceId_date_pairs, $serviceId_date_pair);
+        }
 	}
+}
+
+// Generate new calendar_dates.txt with services that definitly drive
+if (count($serviceId_date_pairs) > 0) {
+	makeCorrectCalendarDates($serviceId_date_pairs);
 }

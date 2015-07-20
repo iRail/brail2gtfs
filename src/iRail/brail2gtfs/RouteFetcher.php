@@ -20,19 +20,19 @@ class RouteFetcher {
     /**
      * Fetch Route fetches for a specific date an array of: a route object and stop_times
      */
-    static function fetchRouteAndStopTimes ($shortName, $date, $trip_id, $language) {
+    static function fetchRouteAndStopTimes ($shortName, $date, $trip_id, $service_id, $language) {
         date_default_timezone_set('UTC');
 
         $dateNMBS = date_create_from_format('Ymd', $date)->format('d/m/Y');
 
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
-        list($route_entry, $stop_times) = self::fetchInfo($serverData, $shortName, $trip_id, $dateNMBS, $language);
+        list($route_entry, $stop_times, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $dateNMBS, $dateGTFS, $language);
         
-        return [$route_entry, $stop_times];
+        return [$route_entry, $stop_times, $serviceId_date_pair];
     }
 
-    static function fetchInfo($serverData, $shortName, $trip_id, $date, $language) {
+    static function fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language) {
         var_dump($shortName);
         var_dump($date);
 
@@ -42,6 +42,7 @@ class RouteFetcher {
 
         $route_entry = null;
         $stopTimes = null;
+        $serviceId_date_pair = null;
         $stations = null; // Used when there are stationnames that don't have a URL, so no stop_ids can be parsed
 
         $html = str_get_html($serverData);
@@ -62,6 +63,9 @@ class RouteFetcher {
                 }
             } else {
                 $log->addError('Train not driving: ' . $shortName . ' on ' . $date . "\n");
+                $serviceId_date_pair = array();
+                $pair = array($service_id, $dateGTFS);
+                array_push($serviceId_date_pair, $pair);
             }
         } else {
 
@@ -158,7 +162,7 @@ class RouteFetcher {
             $route_entry = self::generateRouteEntry($shortName, $departureStation, $arrivalStation);
         }
 
-        return [$route_entry, $stopTimes];
+        return [$route_entry, $stopTimes, $serviceId_date_pair];
     }
 
     // Scrapes one route
