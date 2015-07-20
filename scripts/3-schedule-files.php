@@ -88,8 +88,8 @@ function addRoute($route_entry) {
 	$csv = "";
 	$csv .= $route_entry["@id"] . ","; // route_id
 	$csv .= $route_entry["gtfs:agency"] . ","; // agency_id
-	$csv .= $route_entry["gtfs:longName"] . ","; // route_long_name
 	$csv .= $route_entry["gtfs:shortName"] . ","; // route_short_name
+	$csv .= $route_entry["gtfs:longName"] . ","; // route_long_name
 	$csv .= $route_entry["gtfs:routeType"]; // route_type
 
 	global $file_routes;
