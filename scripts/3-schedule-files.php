@@ -115,7 +115,7 @@ function makeCorrectCalendarDates($serviceId_date_pairs) {
 	    fclose($handleWrite);
 
 	    // Delete old calendar_dates.txt
-	    if (unset($file_calendar_dates)) {
+	    if (unlink($file_calendar_dates)) {
 	    	var_dump("Deleted calendar_dates.txt");
 	    }
 
