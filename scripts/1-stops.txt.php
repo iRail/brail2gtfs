@@ -30,7 +30,7 @@ function appendCSV($dist, $csv) {
 }
 
 // header CSV
-$header = "stop_id,stop_name,stop_lat,stop_long,location_type";
+$header = "stop_id,stop_name,stop_lat,stop_lon,location_type";
 appendCSV($dist, $header);
 
 // content
