@@ -54,12 +54,12 @@ class RouteFetcher {
                 $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{"attr"});
                 if (self::drives($url)) {
                     $serverData = self::getServerDataByUrl($url);
-                    list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
+                    list($route_entry, $stopTimes, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language);
                 } else {
                     // Second url
                     $url = array_shift($html->getElementByTagName('table')->children[2]->children[0]->children[0]->{"attr"});
                     $serverData = self::getServerDataByUrl($url);
-                    list($route_entry, $stopTimes) = self::fetchInfo($serverData, $shortName, $trip_id, $date, $language);
+                    list($route_entry, $stopTimes, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language);
                 }
             } else {
                 $log->addError('Train not driving: ' . $shortName . ' on ' . $date . "\n");
