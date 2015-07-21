@@ -20,8 +20,13 @@ $language = "nn"; // Dutch
 // $language = "fr"; // French
 // $language = "en"; // English
 
+$serviceId_date_pairs = array(); // All the trips don't drive go in here
+
 // Returns hashmap. Key: route_id - Value: array of dates with a distinct service_id
 function getRoutesWithDates() {
+	var_dump("Preparing hashmap with unique service_id and date pairs.");
+
+	global $serviceId_date_pairs;
 	$hashmap = array(); // holds route_short_name => array of dates
 
 	if(($handle = fopen('dist/routes_info.tmp.txt', 'r')) !== false)
@@ -42,8 +47,16 @@ function getRoutesWithDates() {
 
 			// Check if service_id has already been added
 			if (!checkForServiceId($hashmap[$route_short_name], $service_id)) {
-				$pair = array($date, $service_id);
-				array_push($hashmap[$route_short_name], $pair);
+				// Extra check that service is active that day
+				// To be 100% sure that all calendar_dates are driving, this should be called for all the calendar_dates
+				// But will take huge performance loss
+				$serviceId_date_pair = getServiceIdDatePair($route_short_name, $service_id, $date);
+				if ($serviceId_date_pair != null) {
+		        	array_push($serviceId_date_pairs, $serviceId_date_pair);
+		        } else {
+					$pair = array($date, $service_id);
+					array_push($hashmap[$route_short_name], $pair);
+				}
 			}
 
 	        // I don't know if this is really necessary, but it couldn't harm;
@@ -52,6 +65,7 @@ function getRoutesWithDates() {
 	    }
 	    fclose($handle);
 	}
+	var_dump("Done");
 
 	return $hashmap;
 }
@@ -69,6 +83,18 @@ function checkForServiceId($dateServiceIdPairs, $service_id) {
 	}
 
 	return $contains;
+}
+
+// this function uses the routefetcher to check if there's a trip driving on a certain day by a route
+function getServiceIdDatePair($route_short_name, $service_id, $date) {
+	// 1 - 1 mapping
+	$trip_id = $route_short_name . $service_id . '1';
+	global $language;
+
+	// processor
+	list($route, $stop_times, $serviceId_date_pair) = RouteFetcher::fetchRouteAndStopTimes($route_short_name, $date, $trip_id, $service_id, $language);
+
+	return $serviceId_date_pair;
 }
 
 // Some services don't drive so those have to be deleted from calendar_dates.txt
@@ -198,7 +224,8 @@ function makeHeaders() {
 makeHeaders();
 
 $hashmap_route_serviceAndDate = getRoutesWithDates();
-$serviceId_date_pairs = array(); // All the trips don't drive go in here
+
+var_dump("Start fetching stop_times.");
 
 foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_pairs) {
 
@@ -230,7 +257,7 @@ foreach ($hashmap_route_serviceAndDate as $route_short_name => $dates_serviceId_
         	addStopTimes($stop_times);
         }
 
-        // Add serviceId-date pair
+        // Add serviceId-date pair. This won't happen anymore, because we filtered in function getRoutesWithDates
         if ($serviceId_date_pair != null) {
         	array_push($serviceId_date_pairs, $serviceId_date_pair);
         }
