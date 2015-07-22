@@ -93,9 +93,9 @@ function getServiceIdDatePair($route_short_name, $service_id, $date, $checkRoute
 	if ($serviceId_date_pair == null && $route != null && $stop_times != null) {
 		// Add already for performance
 		// routes.txt
-		if (!$checkRouteAdd[$route]) {
+		if (!isset($checkRouteAdd[$route_short_name])) {
 			addRoute($route);
-			$checkRouteAdd[$route] = true;
+			$checkRouteAdd[$route_short_name] = true;
 		}
 
 		// trips.txt
