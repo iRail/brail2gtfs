@@ -49,7 +49,7 @@ function init() {
 				// Extra check that service is active that day
 				// To be 100% sure that all calendar_dates are driving, this should be called for all the calendar_dates
 				// But will take huge performance loss
-				$serviceId_date_pair = getServiceIdDatePair($route_short_name, $service_id, $date, $checkRouteAdd);
+				$serviceId_date_pair = getServiceIdDatePair($route_short_name, $service_id, $date);
 				if ($serviceId_date_pair != null) {
 		        	array_push($serviceId_date_pairs, $serviceId_date_pair);
 		        } else {
@@ -82,7 +82,9 @@ function checkForServiceId($dateServiceIdPairs, $service_id) {
 }
 
 // this function uses the routefetcher to check if there's a trip driving on a certain day by a route
-function getServiceIdDatePair($route_short_name, $service_id, $date, $checkRouteAdd) {
+function getServiceIdDatePair($route_short_name, $service_id, $date) {
+	global $checkRouteAdd;
+	
 	// 1 - 1 mapping
 	$trip_id = $route_short_name . $service_id . '1';
 	global $language;
