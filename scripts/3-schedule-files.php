@@ -119,8 +119,7 @@ function makeCorrectCalendarDates($serviceId_date_pairs) {
 	if(($handleRead = fopen($file_calendar_dates, 'r')) !== false && ($handleWrite = fopen($file_temp, 'w')) !== false)
 	{
 		// Header new calendar_dates.txt file
-		$header = "service_id,date,exception_type";
-		appendCSV($file_temp, $header);
+		fputcsv($handleWrite,"service_id,date,exception_type");
 
 	    // get the first row, which contains the column-titles (if necessary)
 	    $header = fgetcsv($handleRead);
