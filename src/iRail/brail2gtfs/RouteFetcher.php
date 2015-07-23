@@ -24,7 +24,7 @@ class RouteFetcher {
         date_default_timezone_set('UTC');
 
         $dateNMBS = date_create_from_format('Ymd', $date)->format('d/m/Y');
-        
+
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
         list($route_entry, $stop_times, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $dateNMBS, $date, $language);
@@ -134,7 +134,7 @@ class RouteFetcher {
                         $nr = substr($link, strpos($link, "stationId=") + strlen("stationId="));
                     }
                     $nr = substr($nr, 0, strlen($nr) - 1); // delete ampersand on the end
-                    $stop_id = 'http://irail.be/stations/NMBS/' . '00' . $nr;
+                    $stop_id = 'stops:' . '00' . $nr;
                 } else {
                     // With foreign stations, there's a sometimes no URL available
                     // Find the stop_id with the stations.json
@@ -143,13 +143,17 @@ class RouteFetcher {
                     }
                     ////////////// TEMPORARY TILL NEW STATIONS.CSV ONLINE
                     if ($stop_name == 'Siegburg (d)') {
-                        $stop_id = 'http://irail.be/stations/NMBS/008015588';
+                        $stop_id = 'stops:008015588';
                     } else if ($stop_name == 'Limburg Sud (d)') {
-                        $stop_id = 'http://irail.be/stations/NMBS/008032572';
+                        $stop_id = 'stops:008032572';
                     } else {
                     ///////////////////////////////////////////////////////
                         $matches = self::getMatches($stations, $stop_name);
                         $stop_id = self::getBestMatchId($matches, $stop_name, $language);
+
+                        if (preg_match("/NMBS\/(\d+)/i", $stop_id,$matches)) {
+                            $stop_id = 'stops:' . $matches[1];
+                        }
                     }
                 }                
 
@@ -250,7 +254,7 @@ class RouteFetcher {
 
     static function generateRouteEntry($shortName, $departureStation, $arrivalStation) {
         $route_entry = [
-            "@id" => "http://irail.be/routes/NMBS/" . $shortName,
+            "@id" => "routes:" . $shortName,
             "@type" => "gtfs:Route",
             "gtfs:longName" => $departureStation . " - " . $arrivalStation,
             "gtfs:shortName" => $shortName,

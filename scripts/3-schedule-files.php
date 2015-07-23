@@ -84,7 +84,7 @@ function checkForServiceId($dateServiceIdPairs, $service_id) {
 // this function uses the routefetcher to check if there's a trip driving on a certain day by a route
 function getServiceIdDatePair($route_short_name, $service_id, $date) {
 	global $checkRouteAdd;
-	
+
 	// 1 - 1 mapping
 	$trip_id = $route_short_name . $service_id . '1';
 	global $language;
@@ -171,7 +171,7 @@ function generateTrip($shortName, $service_id, $trip_id) {
 	$trip_entry = [
         "@id" => $trip_id, //Sadly, this is only a local identifier
         "@type" => "gtfs:Trip",
-        "gtfs:route" => "http://irail.be/routes/NMBS/" . $shortName,
+        "gtfs:route" => "routes:" . $shortName,
         "gtfs:service" => $service_id, //Sadly, this is only a local identifier, and we use the same id as the trip for service rules
     ];
 

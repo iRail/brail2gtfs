@@ -40,7 +40,11 @@ $csv = "";
 for($i=0; $i<count($stops); $i++){
 	$stop = $stops[$i];
 
-	$csv .= $stop->{"@id"} . ",";
+	if (preg_match("/NMBS\/(\d+)/i", $stop->{"@id"}, $matches)) {
+        $stop_id = 'stops:' . $matches[1];
+    }
+
+	$csv .= $stop_id . ",";
 	$csv .= $stop->{"name"} . ",";
 	$csv .= $stop->{"latitude"} . ",";
 	$csv .= $stop->{"longitude"} . ",";
