@@ -44,7 +44,7 @@ for($i=0; $i<count($stops); $i++){
 	$csv .= $stop->{"name"} . ",";
 	$csv .= $stop->{"latitude"} . ",";
 	$csv .= $stop->{"longitude"} . ",";
-	$csv .= "1"; // what we describe are all parent_stations, which have "platforms"
+	$csv .= "0"; // what we describe are all parent_stations, which have "platforms"
 
 	appendCSV($dist,$csv);
 	$csv = "";
