@@ -24,7 +24,7 @@ class RouteFetcher {
         date_default_timezone_set('UTC');
 
         $dateNMBS = date_create_from_format('Ymd', $date)->format('d/m/Y');
-
+        
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
         list($route_entry, $stop_times, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $dateNMBS, $date, $language);
@@ -74,6 +74,7 @@ class RouteFetcher {
             $stop_sequence = 1; // counter
             $stopTimes = array();
             $route_entry = array();
+            $spansMultipleDates = false;
 
             // First node is just the header
             $i = 1; // Pointer to node
@@ -165,8 +166,28 @@ class RouteFetcher {
                 $arrivalTime .= ':00';
                 $departureTime .= ':00';
 
+                // Check if arrival- and departuretime spans multiple dates
+                // First convert to datetime-object
+                $arrivalDateTime = date_create_from_format('H:i:s', $arrivalTime);
+                $departureDateTime = date_create_from_format('H:i:s', $departureTime);
+
+                if (isset($previousDateTime) && ($arrivalDateTime < $previousDateTime || $departureTime < $arrivalTime)) {
+                    $spansMultipleDates = true;
+                }
+
+                if ($spansMultipleDates) {
+                    $borderTime = date_create_from_format('H:i:s','00:00:00');
+                    if ($arrivalDateTime <= $departureDateTime && $arrivalDateTime > $borderTime) {
+                        $temp = $arrivalDateTime;
+                        $arrivalTime = ($temp->format('H') + 24) . ':' . $temp->format('i:s');
+                    }
+                    $temp = $departureDateTime;
+                    $departureTime = ($temp->format('H') + 24) . ':' . $temp->format('i:s');
+                }
+
                 array_push($stopTimes, self::generateStopTimesEntry($trip_id, $arrivalTime, $departureTime, $stop_id, $stop_sequence));
 
+                $previousDateTime = $departureDateTime;
                 $stop_sequence++;
                 $i++;
             }
