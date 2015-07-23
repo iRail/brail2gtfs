@@ -84,7 +84,7 @@ function getData($serverData, $date, $shortName) {
        		$drives = true;
 
 	        // Filter out busses and others
-	        if (substr($route_short_name,0,strlen($shortName)) == $shortName) {
+	        if (substr($route_short_name,0,strlen($shortName)) == $shortName && substr($route_short_name,0,3) != 'Bus') {
 	        	// Route splits: two different destinations
 	        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
 	        		// route is split in two routes
@@ -101,11 +101,10 @@ function getData($serverData, $date, $shortName) {
 	        			$drives = false;
 	        		}
 	        	}
-	        }
-
-	        if ($drives) {
+	        	if ($drives) {
     			checkServiceId($route_short_name, $date, $VTString);
-        	}
+        		}
+	        }
 
 			$previous_route_short_name = $route_short_name;
 			$previous_destination = $destination;
