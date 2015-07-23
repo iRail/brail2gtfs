@@ -89,7 +89,7 @@ class RouteFetcher {
                 if ($stop_sequence == 1) {
                     // only departure
                     $departureTime = array_shift($node->children[1]->children[1]->nodes[0]->_);
-                    $arrivalTime = "";
+                    $arrivalTime = $departureTime;
                     // Stop_name
                     $stop_name = trim(array_shift($node->children[3]->nodes[0]->_));
                     if ($stop_name == '') {
@@ -102,8 +102,8 @@ class RouteFetcher {
                 // Last stop
                 else if ($i == count($nodes)-1) {
                     // only arrival
-                    $departureTime = "";
                     $arrivalTime = array_shift($node->children[1]->children[0]->nodes[0]->_);
+                    $departureTime = $arrivalTime;
                     // Stop_name
                     $stop_name = trim(array_shift($node->children[3]->nodes[0]->_));
                     if ($stop_name == '') {
