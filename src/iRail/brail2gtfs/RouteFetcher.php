@@ -161,6 +161,10 @@ class RouteFetcher {
                     $platform = "";
                 }
 
+                // Times must be eight digits in HH:MM:SS format
+                $arrivalTime .= ':00';
+                $departureTime .= ':00';
+
                 array_push($stopTimes, self::generateStopTimesEntry($trip_id, $arrivalTime, $departureTime, $stop_id, $stop_sequence));
 
                 $stop_sequence++;
