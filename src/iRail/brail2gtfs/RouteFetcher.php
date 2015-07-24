@@ -349,6 +349,12 @@ class RouteFetcher {
             $query = 'Kautebaach';
         } else if ($query == 'Koln Hbf (d)') {
             $query = 'Köln Hbf';
+        } else if ($query == 'Capellen (l)') {
+            $query = 'Kapellen';
+        } else if ($query == 'Kleinbettingen (l)') {
+            $query = 'Klengbetten';
+        } else if ($query == 'Aeroport Cdg Tgv (f)') {
+            $query = 'Aéroport Charles-de-Gaulle TGV';
         }
 
         // Delete ('country-abbreviation') if present
