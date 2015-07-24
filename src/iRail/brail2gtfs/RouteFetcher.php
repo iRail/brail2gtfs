@@ -181,7 +181,7 @@ class RouteFetcher {
 
                 if ($spansMultipleDates) {
                     $borderTime = date_create_from_format('H:i:s','00:00:00');
-                    if ($arrivalDateTime <= $departureDateTime && $arrivalDateTime > $borderTime) {
+                    if ($arrivalDateTime <= $departureDateTime && $arrivalDateTime >= $borderTime) {
                         $temp = $arrivalDateTime;
                         $arrivalTime = ($temp->format('H') + 24) . ':' . $temp->format('i:s');
                     }
