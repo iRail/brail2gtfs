@@ -146,6 +146,10 @@ class RouteFetcher {
                         $stop_id = 'stops:008015588';
                     } else if ($stop_name == 'Limburg Sud (d)') {
                         $stop_id = 'stops:008032572';
+                    } else if ($stop_name == 'Duisburg Hbf') {
+                        $stop_id = 'stops:008010316';
+                    } else if ($stop_name == 'Tgv Haute Picardie (f)') {
+                        $stop_id = 'stops:008731388';
                     } else {
                     ///////////////////////////////////////////////////////
                         $matches = self::getMatches($stations, $stop_name);
@@ -355,6 +359,12 @@ class RouteFetcher {
             $query = 'Klengbetten';
         } else if ($query == 'Aeroport Cdg Tgv (f)') {
             $query = 'Aéroport Charles-de-Gaulle TGV';
+        } else if ($query == 'Tgv Haute Picardie (f)') {
+            $query = 'Haute-Picardie TGV';
+        } else if ($query == 'Duesseldorf Hbf (d)') {
+            $query = 'Düsseldorf Hbf';
+        } else if ($query == 'Croix L Allumette (f)') {
+            $query = "Croix l'Allumette";
         }
 
         // Delete ('country-abbreviation') if present
