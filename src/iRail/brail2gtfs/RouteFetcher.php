@@ -150,7 +150,19 @@ class RouteFetcher {
                         $stop_id = 'stops:008010316';
                     } else if ($stop_name == 'Tgv Haute Picardie (f)') {
                         $stop_id = 'stops:008731388';
-                    } else {
+                    } else if ($stop_name == 'Agde (f)') {
+                        $stop_id = 'stops:008778127';
+                    } else if ($stop_name == 'Beziers (f)') {
+                        $stop_id = 'stops:008778100';
+                    } else if ($stop_name == 'Narbonne (f)') {
+                        $stop_id = 'stops:008778110';
+                    } else if ($stop_name == 'Perpignan (f)') {
+                        $stop_id = 'stops:008778400';
+                    } else if ($stop_name == 'Duesseldorf Flughafen (d)') {
+                        $stop_id = 'stops:008039904';
+                    } else if ($stop_name == 'Lyon Perrache') {
+                        $stop_id = 'stops:008772202';
+                    }else {
                     ///////////////////////////////////////////////////////
                         $matches = self::getMatches($stations, $stop_name);
                         $stop_id = self::getBestMatchId($matches, $stop_name, $language);
