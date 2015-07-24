@@ -162,7 +162,9 @@ class RouteFetcher {
                         $stop_id = 'stops:008039904';
                     } else if ($stop_name == 'Lyon Perrache') {
                         $stop_id = 'stops:008772202';
-                    }else {
+                    } else if ($stop_name == 'Sete (f)') {
+                        $stop_id = 'stops:008777320';
+                    } else {
                     ///////////////////////////////////////////////////////
                         $matches = self::getMatches($stations, $stop_name);
                         $stop_id = self::getBestMatchId($matches, $stop_name, $language);
