@@ -10,15 +10,15 @@ require("vendor/autoload.php");
 
 use iRail\brail2gtfs\RouteFetcher;
 
+$configs = include('config.php');
+
 $file_routes = "dist/routes.txt";
 $file_trips = "dist/trips.txt";
 $file_stop_times = "dist/stop_times.txt";
 $file_temp = 'dist/calendar_dates_temp.txt';
 $file_calendar_dates = "dist/calendar_dates.txt";
 
-$language = "nn"; // Dutch
-// $language = "fr"; // French
-// $language = "en"; // English
+$language = $configs['language'];
 
 $serviceId_date_pairs = array(); // All the trips don't drive go in here
 
