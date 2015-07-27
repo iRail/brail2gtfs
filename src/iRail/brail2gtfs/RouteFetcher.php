@@ -164,6 +164,8 @@ class RouteFetcher {
                         $stop_id = 'stops:008772202';
                     } else if ($stop_name == 'Sete (f)') {
                         $stop_id = 'stops:008777320';
+                    } else if ($stop_name == 'Lyon Part Dieu (f)') {
+                        $stop_id = 'stops:008772319';
                     } else {
                     ///////////////////////////////////////////////////////
                         $matches = self::getMatches($stations, $stop_name);
