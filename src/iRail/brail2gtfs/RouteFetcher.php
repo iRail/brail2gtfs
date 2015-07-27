@@ -178,10 +178,14 @@ class RouteFetcher {
                 }                
 
                 // Has platform
-                if (count($node->children) > 5 && trim(array_shift($node->children[5]->nodes[0]->_)) != '&nbsp;') {
+                if (count($node->children) == 6) {
                     $platform = trim(array_shift($node->children[5]->nodes[0]->_));
-                } else if (is_object($node->children[4])) {
-                    $platform = "";
+                    if ($platform == '&nbsp;') {
+                        $platform = "";
+                    } else {
+                        // Add platform to stop_id
+                        $stop_id .= ':' . $platform;
+                    }
                 } else {
                     $platform = "";
                 }
