@@ -166,6 +166,20 @@ class RouteFetcher {
                         $stop_id = 'stops:008777320';
                     } else if ($stop_name == 'Lyon Part Dieu (f)') {
                         $stop_id = 'stops:008772319';
+                    } else if ($stop_name =='Chambery Challes L (f)') {
+                        $stop_id = 'stops:008774100';
+                    } else if ($stop_name =='Albertville (f)') {
+                        $stop_id = 'stops:008774164';
+                    } else if ($stop_name =='Moutiers Sb Les B (f)') {
+                        $stop_id = 'stops:008774172';
+                    } else if ($stop_name =='Aime La Plagne (f)') {
+                        $stop_id = 'stops:008774176';
+                    } else if ($stop_name =='Landry (f)') {
+                        $stop_id = 'stops:008774177';
+                    } else if ($stop_name =='Bourg Saint Maurice (f)') {
+                        $stop_id = 'stops:008774179';
+                    } else if ($stop_name =='Lyon-Saint Exupery') {
+                        $stop_id = 'stops:008776290';
                     } else {
                     ///////////////////////////////////////////////////////
                         $matches = self::getMatches($stations, $stop_name);
