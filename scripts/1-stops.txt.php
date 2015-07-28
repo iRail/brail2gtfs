@@ -7,9 +7,14 @@
  */
 require 'vendor/autoload.php';
 
+include_once ("includes/simple_html_dom.php");
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
+
+// set the default timezone to use. Available since PHP 5.1
+date_default_timezone_set('UTC');
 
 $configs = include('config.php');
 
@@ -29,30 +34,66 @@ function getStops(){
 	return json_decode($json);
 }
 
-function getNumberAndLetterPairOfPlatforms($url) {
-	$client = new Client();
+// Scrapes list of routes of the Belgian Rail website
+function getServerData($stationId) {
+	$request_options = array(
+        "timeout" => "30",
+        "useragent" => "iRail.be by Project iRail",
+    );
+	$currentDate = date('d/m/Y');
+	$time = '10:35';
+	$numberOfResults = '50';
+	$scrapeURL = "http://www.belgianrail.be/jpm/sncb-nmbs-routeplanner/stboard.exe/nox"
+	            . "?input=" . $stationId . "&date=" . $currentDate . "&time=" . $time . "&";
 
-	try {
-		$response = $client->get($url, [
-		    'headers' => [
-		        'Accept'     => 'application/json',
-		    ]
-		]);
-	} catch (RequestException $e) {
-	    return NULL;
-	} catch (ServerException $e) {
-		return NULL;
-	}
+    $post_data = "maxJourneys=" . $numberOfResults . "&boardType=dep"
+                . "&productsFilter=0111111000&start=yes";
 
-	$arrivals = json_decode($response->getBody())->{"@graph"};
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $scrapeURL);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));  
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data); 
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
+    curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+    $result = curl_exec($ch);
 
-	// Loop through train-arrivals and keep biggest platformnumber
+    curl_close ($ch);
+
+  return $result;
+}
+
+function getNumberAndLetterPairOfPlatforms($stationId) {
+
+	$result = getServerData($stationId);
+
+	$html = str_get_html($result);
+
 	$maxNr = NULL;
 	$maxLetter = NULL;
-	for ($i=0; $i < count($arrivals); $i++) {
-		$platform = $arrivals[$i]->{"platform"};
-		if ($platform != "") {
-			if (is_numeric($platform)) {
+
+	$test = $html->getElementById('hfs_content');
+    if (!is_object($test)) {
+        var_dump('No connection or bad response.');
+    } else {
+        $nodes = $html->getElementById('hfs_content')->children;
+
+        $i = 1; // Pointer to node
+        while (count($nodes) > $i) {
+            $node = $nodes[$i];
+
+            if($node->{'attr'}['class'] != "journey") {
+            	$i++;
+            	continue; // row with no class-attribute contain no data
+            }
+
+            $platform = trim(array_shift($node->nodes[6]->_));
+            $start = strpos($platform, ' ') + 1;
+            $platform = substr($platform, $start);
+
+            // Loop through train-arrivals and keep biggest platformnumber
+            if (is_numeric($platform)) {
 				// Regular platform number
 				if ($platform > $maxNr) {
 					$maxNr = $platform;
@@ -63,7 +104,9 @@ function getNumberAndLetterPairOfPlatforms($url) {
 					$maxLetter = $platform;
 				}
 			}
-		}		
+
+            $i++;
+        }
 	}
 
 	return [$maxNr, $maxLetter];
@@ -114,6 +157,7 @@ for ($i=0; $i<count($stops); $i++) {
 
 	$parent_id = $stop->{"@id"};
 	if (preg_match("/NMBS\/(\d+)/i", $parent_id, $matches)) {
+		$stationId = $matches[1];
         $parent_stop_id = 'stops:' . $matches[1];
     }
     $parent_name = $stop->{"name"};
@@ -129,7 +173,7 @@ for ($i=0; $i<count($stops); $i++) {
 
 	// Search highest platformnumber of station
 	// Add different platforms: stop_id of station + # + number of platform 
-	$nrAndLetter = getNumberAndLetterPairOfPlatforms($parent_id);
+	$nrAndLetter = getNumberAndLetterPairOfPlatforms($stationId);
 
 	$nr = $nrAndLetter[0];
 	$letter = $nrAndLetter[1];
