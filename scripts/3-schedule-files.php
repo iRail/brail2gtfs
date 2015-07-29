@@ -17,6 +17,7 @@ $file_trips = "dist/trips.txt";
 $file_stop_times = "dist/stop_times.txt";
 $file_temp = 'dist/calendar_dates_temp.txt';
 $file_calendar_dates = "dist/calendar_dates.txt";
+$file_stops = 'dist/stops.txt';
 
 $language = $configs['language'];
 
@@ -165,6 +166,149 @@ function makeCorrectCalendarDates($serviceId_date_pairs) {
 	}
 }
 
+function getAllStops() {
+	global $file_stop_times;
+
+	 $allStops = array();
+
+	if (($handleRead = fopen($file_stop_times, 'r')) !== false)
+	{
+	    // get the first row, which contains the column-titles (if necessary)
+	    fgetcsv($handleRead);
+	    
+	    // loop through the file line-by-line
+	    while(($line = fgetcsv($handleRead)) !== false)
+	    {
+    		
+			$stop_id_ = $line[3]; // $line is an array of the csv elements
+			
+			array_push($allStops, $stop_id_);
+
+	        // I don't know if this is really necessary, but it couldn't harm;
+	        // see also: http://php.net/manual/en/features.gc.php
+	        unset($line);
+	    }
+	    fclose($handleRead);
+	}
+
+	return $allStops;
+}
+
+function findMissingStops($allStops) {
+	global $file_stops;
+
+	$knownStops = array();
+
+	if (($handleRead = fopen($file_stops, 'r')) !== false)
+	{
+	    // get the first row, which contains the column-titles (if necessary)
+	    fgetcsv($handleRead);
+	    
+	    // loop through the file line-by-line
+	    while(($line = fgetcsv($handleRead)) !== false)
+	    {
+    		$stop_id_ = $line[0]; // $line is an array of the csv elements
+
+			array_push($knownStops, $stop_id_);
+
+	        // I don't know if this is really necessary, but it couldn't harm;
+	        // see also: http://php.net/manual/en/features.gc.php
+	        unset($line);
+	    }
+	    fclose($handleRead);
+	}
+
+	$missingStops = array();
+
+	foreach ($allStops as $distinctId => $distinctStop) {
+		$known = false;
+		foreach ($knownStops as $knownId => $knownStop) {
+			if ($distinctStop == $knownStop) {
+				$known = true;
+			}
+		}
+
+		if ($known == false) {
+			array_push($missingStops, $distinctStop);
+		}
+	}
+
+	return $missingStops;
+}
+
+function addMissingStops($missingStops) {
+	global $file_stops;
+	$addedStops = array();
+
+	for ($i=0; $i<count($missingStops); $i++) {
+		$missing_stop_id = $missingStops[$i];
+
+		// Parent stop_id is without last part (platform)
+		$pos1 = strpos($missing_stop_id, ':');
+		$pos2 = strpos($missing_stop_id, ':', $pos1 + 1);
+		$parent_stop_id = substr($missing_stop_id, 0, $pos2);
+		$missing_stop_platform = substr($missing_stop_id, $pos2 + 1);
+
+		// Search parent station and add platform info
+		if (($handleRead = fopen($file_stops, 'r')) !== false)
+		{
+		    // get the first row, which contains the column-titles (if necessary)
+		    fgetcsv($handleRead);
+		    
+		    // loop through the file line-by-line
+		    while(($line = fgetcsv($handleRead)) !== false)
+		    {
+				$id = $line[0]; // $line is an array of the csv elements
+				
+				if (isStopAdded($addedStops, $missing_stop_id) == false && $id == $parent_stop_id) {
+					// Add stop with data from parent station
+					$parent_stop_name = $line[1];
+					$stop_name = getStopNameByLanguage($parent_stop_name, $missing_stop_platform);
+					$stop_lat = $line[2];
+					$stop_lon = $line[3];
+					$stop_station_type = 0;
+
+					addStop($missing_stop_id, $stop_name, $stop_lat, $stop_lon, $stop_station_type);
+
+					array_push($addedStops, $missing_stop_id);
+				}
+
+		        // I don't know if this is really necessary, but it couldn't harm;
+		        // see also: http://php.net/manual/en/features.gc.php
+		        unset($line);
+		    }
+		    fclose($handleRead);
+		}
+	}
+}
+
+function isStopAdded($addedStops, $missing_stop_id) {
+	$added = false;
+	foreach ($addedStops as $key => $stop_id) {
+		if ($stop_id == $missing_stop_id) {
+			$added = true;
+		}
+	}
+
+	return $added;
+}
+
+function getStopNameByLanguage($parent_name, $platformNr) {
+	global $configs;
+
+	if ($configs["language"] == 'en') {
+		$stop_name = $parent_name . ' platform ' . $platformNr;
+	} else if ($configs["language"] == 'fr') {
+		$stop_name = $parent_name . ' quai ' . $platformNr;
+	} else if ($configs["language"] == 'de') {
+		$stop_name = $parent_name . ' bahnsteig ' . $platformNr;
+	} else {
+		$stop_name = $parent_name . ' perron ' . $platformNr;
+	}
+
+	return $stop_name;
+}
+
 function generateTrip($shortName, $service_id, $trip_id) {
 	$trip_entry = [
         "@id" => $trip_id, //Sadly, this is only a local identifier
@@ -216,6 +360,18 @@ function addStopTimes($stop_times) {
 	}
 }
 
+function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $stop_station_type) {
+	$csv = "";
+	$csv .= $stop_id . ",";
+	$csv .= $stop_name . ",";
+	$csv .= $stop_lat . ",";
+	$csv .= $stop_lon . ",";
+	$csv .= $stop_station_type;
+
+	global $file_stops; 
+	appendCSV($file_stops,$csv);
+}
+
 function makeHeaders() {
 	global $file_routes, $file_trips, $file_stop_times;
 
@@ -233,11 +389,22 @@ function makeHeaders() {
 }
 
 // header CSVs
-makeHeaders();
+// makeHeaders();
 
-init();
+// init();
 
 // Generate new calendar_dates.txt with services that definitly drive
-if (count($serviceId_date_pairs) > 0) {
-	makeCorrectCalendarDates($serviceId_date_pairs);
-}
+// if (count($serviceId_date_pairs) > 0) {
+// 	makeCorrectCalendarDates($serviceId_date_pairs);
+// }
+
+// All the stations are added, but not all platforms inside stops.txt
+// To do this, we hold a variable that contains all the distinct stops inside stop_times.txt
+var_dump("Fixing missing stops");
+$allStops = getAllStops();
+
+// Then we iterate through our stops.txt and delete the stops inside our variable so the missing stops are left over
+$missingStops = findMissingStops($allStops);
+
+// Last step, iterate through our missing stops and add these to stops.txt
+addMissingStops($missingStops);
