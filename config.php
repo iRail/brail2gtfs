@@ -10,7 +10,7 @@ return array(
     'start_date' => '01-01-2015',
     'end_date' => '14-12-2015',
     'shortNames' => array("IC", "L", "P", "TGV", "THA", "TRN", "EXT"),
-    'language' => 'nn' // Dutch
+    'language' => 'nl' // Dutch
     // 'language' => 'en' // English
     // 'language' => 'fr' // French
     // 'language' => 'de' // German
