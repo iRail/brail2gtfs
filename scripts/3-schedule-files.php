@@ -1,6 +1,6 @@
 <?php
 /**
- * This script populates the following GTFS files: routes.txt, trips.txt, stop_times.txt
+ * This script populates the following GTFS files: routes.txt, trips.txt, stop_times.txt and the missing stops in stops.txt
  *
  * @author Brecht Van de Vyvere <brecht@iRail.be>
  * @author Pieter Colpaert <pieter@iRail.be>
@@ -389,14 +389,14 @@ function makeHeaders() {
 }
 
 // header CSVs
-// makeHeaders();
+makeHeaders();
 
-// init();
+init();
 
 // Generate new calendar_dates.txt with services that definitly drive
-// if (count($serviceId_date_pairs) > 0) {
-// 	makeCorrectCalendarDates($serviceId_date_pairs);
-// }
+if (count($serviceId_date_pairs) > 0) {
+	makeCorrectCalendarDates($serviceId_date_pairs);
+}
 
 // All the stations are added, but not all platforms inside stops.txt
 // To do this, we hold a variable that contains all the distinct stops inside stop_times.txt
