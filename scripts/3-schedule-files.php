@@ -263,12 +263,13 @@ function addMissingStops($missingStops) {
 				if (isStopAdded($addedStops, $missing_stop_id) == false && $id == $parent_stop_id) {
 					// Add stop with data from parent station
 					$parent_stop_name = $line[1];
-					$stop_name = getStopNameByLanguage($parent_stop_name, $missing_stop_platform);
+					$stop_name = $parent_stop_name;
 					$stop_lat = $line[2];
 					$stop_lon = $line[3];
+					$stop_platform = $missing_stop_platform;
 					$stop_station_type = 0;
 
-					addStop($missing_stop_id, $stop_name, $stop_lat, $stop_lon, $stop_station_type);
+					addStop($missing_stop_id, $stop_name, $stop_lat, $stop_lon, $stop_platform, $parent_stop_id, $stop_station_type);
 
 					array_push($addedStops, $missing_stop_id);
 				}
@@ -291,22 +292,6 @@ function isStopAdded($addedStops, $missing_stop_id) {
 	}
 
 	return $added;
-}
-
-function getStopNameByLanguage($parent_name, $platformNr) {
-	global $configs;
-
-	if ($configs["language"] == 'en') {
-		$stop_name = $parent_name . ' platform ' . $platformNr;
-	} else if ($configs["language"] == 'fr') {
-		$stop_name = $parent_name . ' quai ' . $platformNr;
-	} else if ($configs["language"] == 'de') {
-		$stop_name = $parent_name . ' bahnsteig ' . $platformNr;
-	} else {
-		$stop_name = $parent_name . ' perron ' . $platformNr;
-	}
-
-	return $stop_name;
 }
 
 function generateTrip($shortName, $service_id, $trip_id) {
@@ -360,15 +345,18 @@ function addStopTimes($stop_times) {
 	}
 }
 
-function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $stop_station_type) {
+function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $platform_code, $parent_station, $location_type) {
+	global $file_stops; 
+
 	$csv = "";
 	$csv .= $stop_id . ",";
 	$csv .= $stop_name . ",";
 	$csv .= $stop_lat . ",";
 	$csv .= $stop_lon . ",";
-	$csv .= $stop_station_type;
+	$csv .= $platform_code . ",";
+	$csv .= $parent_station . ",";
+	$csv .= $location_type;
 
-	global $file_stops; 
 	appendCSV($file_stops,$csv);
 }
 

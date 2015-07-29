@@ -112,23 +112,7 @@ function getNumberAndLetterPairOfPlatforms($stationId) {
 	return [$maxNr, $maxLetter];
 }
 
-function getStopName($parent_name, $platformNr) {
-	global $configs;
-
-	if ($configs["language"] == 'en') {
-		$stop_name = $parent_name . ' platform ' . $platformNr;
-	} else if ($configs["language"] == 'fr') {
-		$stop_name = $parent_name . ' quai ' . $platformNr;
-	} else if ($configs["language"] == 'de') {
-		$stop_name = $parent_name . ' bahnsteig ' . $platformNr;
-	} else {
-		$stop_name = $parent_name . ' perron ' . $platformNr;
-	}
-
-	return $stop_name;
-}
-
-function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $stop_station_type) {
+function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $platform_code, $parent_station, $location_type) {
 	global $dist; 
 
 	$csv = "";
@@ -136,7 +120,9 @@ function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $stop_station_type)
 	$csv .= $stop_name . ",";
 	$csv .= $stop_lat . ",";
 	$csv .= $stop_lon . ",";
-	$csv .= $stop_station_type;
+	$csv .= $platform_code . ",";
+	$csv .= $parent_station . ",";
+	$csv .= $location_type;
 
 	appendCSV($dist,$csv);
 }
@@ -146,7 +132,7 @@ function appendCSV($dist, $csv) {
 }
 
 // header CSV
-$header = "stop_id,stop_name,stop_lat,stop_lon,location_type";
+$header = "stop_id,stop_name,stop_lat,stop_lon,platform_code,parent_station,location_type";
 appendCSV($dist, $header);
 
 // content
@@ -166,10 +152,14 @@ for ($i=0; $i<count($stops); $i++) {
 
     // what we describe are all parent_stations, which have "platforms"
     // Because we don't always the platforms of a trip, we need to add these parent_stations as normal stops
-    $parent_station_type = 0;
+    $parent_station_type = 1;
 
     // Add parent station as stop
-    addStop($parent_stop_id, $parent_name, $parent_lat, $parent_lon, $parent_station_type);
+    addStop($parent_stop_id, $parent_name, $parent_lat, $parent_lon, '', '', $parent_station_type);
+
+    // Add stop when no platform number is known
+    // Leave platform_code attribute empty
+    addStop($parent_stop_id . ':0', $parent_name, $parent_lat, $parent_lon, '', $parent_stop_id, 0);
 
 	// Search highest platformnumber of station
 	// Add different platforms: stop_id of station + # + number of platform 
@@ -184,11 +174,11 @@ for ($i=0; $i<count($stops); $i++) {
 		while ($j <= $nr) {
 			$stop_id = $parent_stop_id . ':' . $j;
 
-			$stop_name = getStopName($parent_name, $j);
+			$stop_name = $parent_name;
 			$stop_type = 0;
 
 			// Todo: get latitude and longitude of every platform
-			addStop($stop_id, $stop_name, $parent_lat, $parent_lon, $stop_type);
+			addStop($stop_id, $stop_name, $parent_lat, $parent_lon, $j, $parent_stop_id, $stop_type);
 
 			$j++;
 		}
@@ -199,11 +189,11 @@ for ($i=0; $i<count($stops); $i++) {
 		while ($j <= $letter) {
 			$stop_id = $parent_stop_id . ':' . $j;
 
-			$stop_name = getStopName($parent_name, $j);
+			$stop_name = $parent_name;
 			$stop_type = 0;
 
 			// Todo: get latitude and longitude of every platform
-			addStop($stop_id, $stop_name, $parent_lat, $parent_lon, $stop_type);
+			addStop($stop_id, $stop_name, $parent_lat, $parent_lon, $j, $parent_stop_id, $stop_type);
 
 			$j++;
 		}
