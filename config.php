@@ -9,6 +9,7 @@
 return array(
     'start_date' => '01-01-2015',
     'end_date' => '14-12-2015',
+    'feed_version' => '1.0',
     'shortNames' => array("IC", "L", "P", "TGV", "THA", "TRN", "EXT"),
     'language' => 'nl' // Dutch
     // 'language' => 'en' // English
