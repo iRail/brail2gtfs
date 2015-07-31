@@ -6,12 +6,13 @@
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
  */
+$configs = include('config.php');
 
 $file_calendar_dates = "dist/calendar_dates.txt";
 $file_routes_info_tmp = "dist/routes_info.tmp.txt";
 
 // ICE and ICT trains are included in search-results IC
-$shortNames = array("IC", "L", "P", "TGV", "THA", "TRN", "EXT");
+$shortNames = $configs['shortNames'];
 
 // Hashmap: route_id => array(service_id, VTString)-pairs
 // This way we can generate a new service_id if a route has a different VTString, so another service
@@ -84,7 +85,7 @@ function getData($serverData, $date, $shortName) {
        		$drives = true;
 
 	        // Filter out busses and others
-	        if (substr($route_short_name,0,strlen($shortName)) == $shortName) {
+	        if (substr($route_short_name,0,strlen($shortName)) == $shortName && substr($route_short_name,0,3) != 'Bus') {
 	        	// Route splits: two different destinations
 	        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
 	        		// route is split in two routes
@@ -101,11 +102,10 @@ function getData($serverData, $date, $shortName) {
 	        			$drives = false;
 	        		}
 	        	}
-	        }
-
-	        if ($drives) {
+	        	if ($drives) {
     			checkServiceId($route_short_name, $date, $VTString);
-        	}
+        		}
+	        }
 
 			$previous_route_short_name = $route_short_name;
 			$previous_destination = $destination;
@@ -153,7 +153,6 @@ function parseSplittedRoute($url) {
     $html = str_get_html($result);
     
     $splitRouteId = getSplitTrainRouteId($html);
-    var_dump($splitRouteId);
 
     return $splitRouteId;
 }
@@ -277,9 +276,9 @@ $header = "route_short_name,service_id,date";
 appendCSV($file_routes_info_tmp, $header);
 
 // Start date
-$start_date = '01-01-2015';
+$start_date = $configs['start_date'];
 // End date → See https://github.com/iRail/brail2gtfs/issues/8
-$end_date = '14-12-2015';
+$end_date = $configs['end_date'];
 
 // content CSV
 // loop all days between start_date and end_date
