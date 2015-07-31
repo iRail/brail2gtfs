@@ -20,35 +20,53 @@ class RouteFetcher {
     /**
      * Fetch Route fetches for a specific date an array of: a route object and stop_times
      */
-    static function fetchRouteAndStopTimes ($shortName, $date, $trip_id, $language) {
+    static function fetchRouteAndStopTimes ($shortName, $date, $trip_id, $service_id, $language) {
         date_default_timezone_set('UTC');
 
         $dateNMBS = date_create_from_format('Ymd', $date)->format('d/m/Y');
-        
+
         $serverData = self::getServerData($dateNMBS, $shortName, $language);
 
-        list($route_entry, $stop_times) = self::fetchInfo($serverData, $shortName, $trip_id, $dateNMBS, $language);
+        list($route_entry, $stop_times, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $dateNMBS, $date, $language);
         
-        return [$route_entry, $stop_times];
+        return [$route_entry, $stop_times, $serviceId_date_pair];
     }
 
-    static function fetchInfo($serverData, $shortName, $trip_id, $date, $language) {
+    static function fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language) {
         var_dump($shortName);
         var_dump($date);
 
         // create a log channel
-        $log = new Logger('route_info');
-        $log->pushHandler(new StreamHandler('route_info.log', Logger::ERROR));
+        $log = new Logger('route_not_driving');
+        $log->pushHandler(new StreamHandler('route_not_driving.log', Logger::ERROR));
 
         $route_entry = null;
         $stopTimes = null;
+        $serviceId_date_pair = null;
         $stations = null; // Used when there are stationnames that don't have a URL, so no stop_ids can be parsed
 
         $html = str_get_html($serverData);
 
         $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
         if (!is_object($test)) {
-            $log->addError('Error with fetching route: ' . $shortName . ' on ' . $date . "\n");
+            // Trainroute splits. Route_id is of the main train, so take the link that drives
+            if (is_object($html->getElementByTagName('table'))) {
+                $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{"attr"});
+                if (self::drives($url)) {
+                    $serverData = self::getServerDataByUrl($url);
+                    list($route_entry, $stopTimes, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language);
+                } else {
+                    // Second url
+                    $url = array_shift($html->getElementByTagName('table')->children[2]->children[0]->children[0]->{"attr"});
+                    $serverData = self::getServerDataByUrl($url);
+                    list($route_entry, $stopTimes, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language);
+                }
+            } else {
+                $log->addError('Train not driving: ' . $shortName . ' on ' . $date . "\n");
+                $serviceId_date_pair = array();
+                $pair = array($service_id, $dateGTFS);
+                array_push($serviceId_date_pair, $pair);
+            }
         } else {
 
             $nodes = $html->getElementById('tq_trainroute_content_table_alteAnsicht')->getElementByTagName('table')->children;
@@ -56,6 +74,7 @@ class RouteFetcher {
             $stop_sequence = 1; // counter
             $stopTimes = array();
             $route_entry = array();
+            $spansMultipleDates = false;
 
             // First node is just the header
             $i = 1; // Pointer to node
@@ -71,7 +90,7 @@ class RouteFetcher {
                 if ($stop_sequence == 1) {
                     // only departure
                     $departureTime = array_shift($node->children[1]->children[1]->nodes[0]->_);
-                    $arrivalTime = "";
+                    $arrivalTime = $departureTime;
                     // Stop_name
                     $stop_name = trim(array_shift($node->children[3]->nodes[0]->_));
                     if ($stop_name == '') {
@@ -84,8 +103,8 @@ class RouteFetcher {
                 // Last stop
                 else if ($i == count($nodes)-1) {
                     // only arrival
-                    $departureTime = "";
                     $arrivalTime = array_shift($node->children[1]->children[0]->nodes[0]->_);
+                    $departureTime = $arrivalTime;
                     // Stop_name
                     $stop_name = trim(array_shift($node->children[3]->nodes[0]->_));
                     if ($stop_name == '') {
@@ -108,31 +127,109 @@ class RouteFetcher {
                 // Can be parsed from the stop-URL
                 if (isset($node->children[3]->children[0])) {
                     $link = $node->children[3]->children[0]->{"attr"}["href"];
-                    $nr = substr($link, strpos($link, "StationId=") + strlen("StationId="));
+                    // With capital C
+                    if (strpos($link, "StationId=")) {
+                        $nr = substr($link, strpos($link, "StationId=") + strlen("StationId="));
+                    } else {
+                        $nr = substr($link, strpos($link, "stationId=") + strlen("stationId="));
+                    }
                     $nr = substr($nr, 0, strlen($nr) - 1); // delete ampersand on the end
-                    $stop_id = 'http://irail.be/stations/NMBS/' . '00' . $nr;
+                    $stop_id = 'stops:' . '00' . $nr;
                 } else {
                     // With foreign stations, there's a sometimes no URL available
                     // Find the stop_id with the stations.json
                     if ($stations == null) {
                         $stations = self::getStations();
                     }
+                    ////////////// TEMPORARY TILL NEW STATIONS.CSV ONLINE
+                    if ($stop_name == 'Siegburg (d)') {
+                        $stop_id = 'stops:008015588';
+                    } else if ($stop_name == 'Limburg Sud (d)') {
+                        $stop_id = 'stops:008032572';
+                    } else if ($stop_name == 'Duisburg Hbf') {
+                        $stop_id = 'stops:008010316';
+                    } else if ($stop_name == 'Tgv Haute Picardie (f)') {
+                        $stop_id = 'stops:008731388';
+                    } else if ($stop_name == 'Agde (f)') {
+                        $stop_id = 'stops:008778127';
+                    } else if ($stop_name == 'Beziers (f)') {
+                        $stop_id = 'stops:008778100';
+                    } else if ($stop_name == 'Narbonne (f)') {
+                        $stop_id = 'stops:008778110';
+                    } else if ($stop_name == 'Perpignan (f)') {
+                        $stop_id = 'stops:008778400';
+                    } else if ($stop_name == 'Duesseldorf Flughafen (d)') {
+                        $stop_id = 'stops:008039904';
+                    } else if ($stop_name == 'Lyon Perrache') {
+                        $stop_id = 'stops:008772202';
+                    } else if ($stop_name == 'Sete (f)') {
+                        $stop_id = 'stops:008777320';
+                    } else if ($stop_name == 'Lyon Part Dieu (f)') {
+                        $stop_id = 'stops:008772319';
+                    } else if ($stop_name =='Chambery Challes L (f)') {
+                        $stop_id = 'stops:008774100';
+                    } else if ($stop_name =='Albertville (f)') {
+                        $stop_id = 'stops:008774164';
+                    } else if ($stop_name =='Moutiers Sb Les B (f)') {
+                        $stop_id = 'stops:008774172';
+                    } else if ($stop_name =='Aime La Plagne (f)') {
+                        $stop_id = 'stops:008774176';
+                    } else if ($stop_name =='Landry (f)') {
+                        $stop_id = 'stops:008774177';
+                    } else if ($stop_name =='Bourg Saint Maurice (f)') {
+                        $stop_id = 'stops:008774179';
+                    } else if ($stop_name =='Lyon-Saint Exupery') {
+                        $stop_id = 'stops:008776290';
+                    } else {
+                    ///////////////////////////////////////////////////////
+                        $matches = self::getMatches($stations, $stop_name);
+                        $stop_id = self::getBestMatchId($matches, $stop_name, $language);
 
-                    $matches = self::getMatches($stations, $stop_name);
-                    $stop_id = self::getBestMatch($matches, $stop_name, $language);
+                        if (preg_match("/NMBS\/(\d+)/i", $stop_id,$matches)) {
+                            $stop_id = 'stops:' . $matches[1];
+                        }
+                    }
                 }                
 
                 // Has platform
-                if (count($node->children) > 5 && trim(array_shift($node->children[5]->nodes[0]->_)) != '&nbsp;') {
+                if (count($node->children) == 6) {
                     $platform = trim(array_shift($node->children[5]->nodes[0]->_));
-                } else if (is_object($node->children[4])) {
-                    $platform = "";
+                    if ($platform == '&nbsp;') {
+                        $platform = "";
+                    } else {
+                        // Add platform to stop_id
+                        $stop_id .= ':' . $platform;
+                    }
                 } else {
                     $platform = "";
                 }
 
+                // Times must be eight digits in HH:MM:SS format
+                $arrivalTime .= ':00';
+                $departureTime .= ':00';
+
+                // Check if arrival- and departuretime spans multiple dates
+                // First convert to datetime-object
+                $arrivalDateTime = date_create_from_format('H:i:s', $arrivalTime);
+                $departureDateTime = date_create_from_format('H:i:s', $departureTime);
+
+                if (isset($previousDateTime) && ($arrivalDateTime < $previousDateTime || $departureTime < $arrivalTime)) {
+                    $spansMultipleDates = true;
+                }
+
+                if ($spansMultipleDates) {
+                    $borderTime = date_create_from_format('H:i:s','00:00:00');
+                    if ($arrivalDateTime <= $departureDateTime && $arrivalDateTime >= $borderTime) {
+                        $temp = $arrivalDateTime;
+                        $arrivalTime = ($temp->format('H') + 24) . ':' . $temp->format('i:s');
+                    }
+                    $temp = $departureDateTime;
+                    $departureTime = ($temp->format('H') + 24) . ':' . $temp->format('i:s');
+                }
+
                 array_push($stopTimes, self::generateStopTimesEntry($trip_id, $arrivalTime, $departureTime, $stop_id, $stop_sequence));
 
+                $previousDateTime = $departureDateTime;
                 $stop_sequence++;
                 $i++;
             }
@@ -140,17 +237,67 @@ class RouteFetcher {
             $route_entry = self::generateRouteEntry($shortName, $departureStation, $arrivalStation);
         }
 
-        return [$route_entry, $stopTimes];
+        return [$route_entry, $stopTimes, $serviceId_date_pair];
+    }
+
+    // Scrapes one route
+    static function drives($url) {
+        $request_options = array(
+                "timeout" => "30",
+                "useragent" => "iRail.be by Project iRail",
+                );
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+        $result = curl_exec($ch);
+        curl_close ($ch);
+
+        $html = str_get_html($result);
+        $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
+
+        return is_object($test);
+    }
+
+    // Gets called when route is split
+    static function hasDifferentDestination($serverData) {
+        $html = str_get_html($serverData);
+
+        if (isset($html->getElementsByTagName('table')->children)) {
+            $nodes = $html->getElementsByTagName('table')->children;
+
+            $node_one = array_shift($nodes);
+            $node_two = array_shift($nodes);
+
+            // 
+            $route_short_name_one = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+            $destination_one = array_shift($node->children[2]->nodes[0]->_);
+            $url_one = array_shift($node->children[0]->children[0]->{'attr'});
+
+            $route_short_name_two = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+            $destination_two = array_shift($node->children[2]->nodes[0]->_);
+            $url_two = array_shift($node->children[0]->children[0]->{'attr'});
+            } else {
+                // Last one
+                // make next from the previous to keep our code
+                $next_route_short_name = $previous_route_short_name;
+                $next_destination = $previous_destination;
+            }
+
+            $drives = true;
     }
 
     static function generateRouteEntry($shortName, $departureStation, $arrivalStation) {
         $route_entry = [
-            "@id" => "http://irail.be/routes/NMBS/" . $shortName,
+            "@id" => "routes:" . $shortName,
             "@type" => "gtfs:Route",
             "gtfs:longName" => $departureStation . " - " . $arrivalStation,
             "gtfs:shortName" => $shortName,
             "gtfs:agency" => "0",
-            "gtfs:routeType" => "gtfs:Rail" //→ 2 according to GTFS/CSV spec
+            "gtfs:routeType" => "2" //→ 2 according to GTFS/CSV spec
         ];
 
         return $route_entry;
@@ -194,6 +341,25 @@ class RouteFetcher {
         return $result;
     }
 
+    static function getServerDataByUrl($scrapeURL) {
+        $request_options = array(
+            "timeout" => "30",
+            "useragent" => "GTFS by Project iRail",
+        );
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $scrapeURL);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+        $result = curl_exec($ch);
+
+        curl_close ($ch);
+
+        return $result;
+    }
+
     static function getStations() {
         $client = new Client();
         $url = "https://irail.be/stations/NMBS";
@@ -213,8 +379,31 @@ class RouteFetcher {
         // Hardcoded some stations that NMBS gives different names to
         if ($query == 'Frankfurt Main (d)') {
             $query = 'Frankfurt am Main Flughafen';
-        } else if ($query = 'Frankfurt Flugh (d)') {
+        } else if ($query == 'Frankfurt Flugh (d)') {
             $query = 'Frankfurt am Main Hbf';
+        } else if ($query == 'Ettelbruck (l)') {
+            $query = 'Ettelbréck';
+        } else if ($query == 'Kautenbach (l)') {
+            $query = 'Kautebaach';
+        } else if ($query == 'Koln Hbf (d)') {
+            $query = 'Köln Hbf';
+        } else if ($query == 'Capellen (l)') {
+            $query = 'Kapellen';
+        } else if ($query == 'Kleinbettingen (l)') {
+            $query = 'Klengbetten';
+        } else if ($query == 'Aeroport Cdg Tgv (f)') {
+            $query = 'Aéroport Charles-de-Gaulle TGV';
+        } else if ($query == 'Tgv Haute Picardie (f)') {
+            $query = 'Haute-Picardie TGV';
+        } else if ($query == 'Duesseldorf Hbf (d)') {
+            $query = 'Düsseldorf Hbf';
+        } else if ($query == 'Croix L Allumette (f)') {
+            $query = "Croix l'Allumette";
+        }
+
+        // Delete ('country-abbreviation') if present
+        if (strpos($query, '(') < strlen($query)) {
+            $query = substr($query, 0, strpos($query, '(') - 2);
         }
 
         // var_dump($stations);
@@ -297,11 +486,10 @@ class RouteFetcher {
         return strtr($str, $unwanted_array);
     }
 
-    static function getBestMatch($matches, $stop_name, $language) {
-        $i = 0; // Index to best match in the graph
+    static function getBestMatchId($matches, $stop_name, $language) {
         $max_percent = 0; // Percentage of similarity of the best match
+        $stop_id = "";
 
-        $j = 0; // Index to match in the loop
         foreach ($matches->{"@graph"} as $match) {
             // First check if the stationname is available in the same language
             if (isset($match["alternative"])) {
@@ -317,14 +505,12 @@ class RouteFetcher {
 
             similar_text($stationName, $stop_name, $percent);
             if ($percent > $max_percent) {
-                $i = $j;
+                $stop_id =  $match["@id"];
                 $max_percent = $percent;
             }
-
-            $j++;
         }
-        
-        return $match["@id"];
+
+        return $stop_id;
     }
 
     static function getAlternativeName($stationsByLang, $language) {
