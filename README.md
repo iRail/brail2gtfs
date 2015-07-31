@@ -1,8 +1,13 @@
 # NMBS/SNCB to GTFS scraper
 
-Scrapes the Belgian railways and generates a GTFS file for the current year.
+Scrapes the Belgian railways and generates GTFS files for the current year.
 
 If you're unsure what GTFS is, check the explanation at http://gtfs.org.
+
+Following traintypes are included:
+IC, ICE, L, P, TGV, THALYS, TRN and EXT
+
+You can download a copy at: http://gtfs.irail.be/
 
 ## Install
 
@@ -11,6 +16,10 @@ We use the PHP package manager [composer](http://getcomposer.org). Make sure it'
 ```bash
 composer install
 ```
+
+## Custom configuration
+
+You can configure the start_date, end_date, feed_version, language and train_types of the GTFS-files by changing config.php in your favorite editor.
 
 ## Generating the GTFS file
 
