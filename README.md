@@ -7,6 +7,8 @@ If you're unsure what GTFS is, check the explanation at http://gtfs.org.
 Following traintypes are included:
 IC, ICE, L, P, TGV, THALYS, TRN and EXT
 
+You can download a copy at: http://gtfs.irail.be/
+
 ## Install
 
 We use the PHP package manager [composer](http://getcomposer.org). Make sure it's installed and then run from this directory:
