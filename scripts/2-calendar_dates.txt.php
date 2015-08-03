@@ -75,6 +75,7 @@ function getData($serverData, $date, $shortName) {
 				$next_route_short_name = preg_replace('/\s+/', '',$next_node->children[0]->children[0]->children[0]->attr{"alt"});
 		        $next_destination = array_shift($next_node->children[2]->nodes[0]->{"_"});
 				$next_VTString = array_shift($next_node->children[4]->nodes[0]->{"_"});
+				$next_url = array_shift($next_node->children[0]->children[0]->{'attr'});
 			} else {
 				// Last one
 				// make next from the previous to keep our code
@@ -88,7 +89,7 @@ function getData($serverData, $date, $shortName) {
 	        if (substr($route_short_name,0,strlen($shortName)) == $shortName && substr($route_short_name,0,3) != 'Bus') {
 	        	// Route splits: two different destinations
 	        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
-	        		// route is split in two routes
+	        		// route is split in two routes: we'll check both
 	        		// First check if this route is really driving this day (bug in NMBS website)
 	        		if (drives($url)) {
 	        			// Check if this train splits by searching for other route_id
@@ -96,14 +97,36 @@ function getData($serverData, $date, $shortName) {
 		        		$split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
 		        		if ($split_route_short_name != NULL) {
 		        			// E.g. IC 1528 -> IC 1628 to Blankenberge
-		        			$route_short_name = $split_route_short_name;
+		        			checkServiceId($split_route_short_name, $date, $VTString);
+		        		} else {
+		        			// Check second route
+		        			if (drives($next_url)) {
+			        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+				        		if ($split_route_short_name != NULL) {
+				        			// E.g. IC 1528 -> IC 1628 to Blankenberge
+				        			checkServiceId($split_route_short_name, $date, $VTString);
+				        		} else {
+			        				$drives = false;
+				        		}
+			        		}
 		        		}
 	        		} else {
-	        			$drives = false;
+	        			// Check second url
+	        			if (drives($next_url)) {
+		        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+			        		if ($split_route_short_name != NULL) {
+			        			// E.g. IC 1528 -> IC 1628 to Blankenberge
+			        			checkServiceId($split_route_short_name, $date, $VTString);
+			        		} else {
+			        			checkServiceId($route_short_name, $date, $VTString);
+			        		}
+			        	} else {
+			        		$drives = false;
+			        	}
 	        		}
 	        	}
-	        	if ($drives) {
-    			checkServiceId($route_short_name, $date, $VTString);
+	        	if ($drives && $route_short_name != $previous_route_short_name) {
+    				checkServiceId($route_short_name, $date, $VTString);
         		}
 	        }
 
