@@ -85,54 +85,57 @@ function getData($serverData, $date, $shortName) {
 
        		$drives = true;
 
-	        // Filter out busses and others
-	        if (substr($route_short_name,0,strlen($shortName)) == $shortName && substr($route_short_name,0,3) != 'Bus') {
-	        	// Route splits: two different destinations
-	        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
-	        		// route is split in two routes: we'll check both
-	        		// First check if this route is really driving this day (bug in NMBS website)
-	        		if (drives($url)) {
-	        			// Check if this train splits by searching for other route_id
-	        			// If not found, this is the main train
-		        		$split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
-		        		if ($split_route_short_name != NULL) {
-		        			// E.g. IC 1528 -> IC 1628 to Blankenberge
-		        			checkServiceId($split_route_short_name, $date, $VTString);
+       		// ICE trains are parsed seperately from IC
+       		if ($shortName == "IC" && substr($route_short_name,0,3) != 'ICE') {
+		        // Filter out busses and others
+		        if (substr($route_short_name,0,strlen($shortName)) == $shortName && substr($route_short_name,0,3) != 'Bus') {
+		        	// Route splits: two different destinations
+		        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
+		        		// route is split in two routes: we'll check both
+		        		// First check if this route is really driving this day (bug in NMBS website)
+		        		if (drives($url)) {
+		        			// Check if this train splits by searching for other route_id
+		        			// If not found, this is the main train
+			        		$split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
+			        		if ($split_route_short_name != NULL) {
+			        			// E.g. IC 1528 -> IC 1628 to Blankenberge
+			        			checkServiceId($split_route_short_name, $date, $VTString);
+			        		} else {
+			        			// Check second route
+			        			if (drives($next_url)) {
+				        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+					        		if ($split_route_short_name != NULL) {
+					        			// E.g. IC 1528 -> IC 1628 to Blankenberge
+					        			checkServiceId($split_route_short_name, $date, $VTString);
+					        		} else {
+				        				$drives = false;
+					        		}
+				        		}
+			        		}
 		        		} else {
-		        			// Check second route
+		        			// Check second url
 		        			if (drives($next_url)) {
 			        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
 				        		if ($split_route_short_name != NULL) {
 				        			// E.g. IC 1528 -> IC 1628 to Blankenberge
 				        			checkServiceId($split_route_short_name, $date, $VTString);
 				        		} else {
-			        				$drives = false;
+				        			checkServiceId($route_short_name, $date, $VTString);
 				        		}
-			        		}
+				        	} else {
+				        		$drives = false;
+				        	}
 		        		}
-	        		} else {
-	        			// Check second url
-	        			if (drives($next_url)) {
-		        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
-			        		if ($split_route_short_name != NULL) {
-			        			// E.g. IC 1528 -> IC 1628 to Blankenberge
-			        			checkServiceId($split_route_short_name, $date, $VTString);
-			        		} else {
-			        			checkServiceId($route_short_name, $date, $VTString);
-			        		}
-			        	} else {
-			        		$drives = false;
-			        	}
+		        	}
+		        	if ($drives && $route_short_name != $previous_route_short_name) {
+	    				checkServiceId($route_short_name, $date, $VTString);
 	        		}
-	        	}
-	        	if ($drives && $route_short_name != $previous_route_short_name) {
-    				checkServiceId($route_short_name, $date, $VTString);
-        		}
-	        }
+		        }
 
-			$previous_route_short_name = $route_short_name;
-			$previous_destination = $destination;
-	    }
+				$previous_route_short_name = $route_short_name;
+				$previous_destination = $destination;
+		    }
+		}
     }          
 }
 
