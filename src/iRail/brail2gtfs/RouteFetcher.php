@@ -195,13 +195,13 @@ class RouteFetcher {
                 if (count($node->children) == 6) {
                     $platform = trim(array_shift($node->children[5]->nodes[0]->_));
                     if ($platform == '&nbsp;') {
-                        $platform = "";
+                        $platform = ':0';
                     } else {
                         // Add platform to stop_id
                         $stop_id .= ':' . $platform;
                     }
                 } else {
-                    $platform = "";
+                    $platform = ':0';
                 }
 
                 // Times must be eight digits in HH:MM:SS format
