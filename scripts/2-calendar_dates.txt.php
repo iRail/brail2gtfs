@@ -265,6 +265,36 @@ function getServiceId($route_short_name, $VTString) {
 	return NULL; // Something went wrong
 }
 
+function deleteDuplicates() {
+	$filename = "dist/calendar_dates.txt";
+	$file = fopen($filename, "r");
+	$read = fread($file, filesize($filename));
+
+	$split = array_unique(explode("\n", $read));
+
+	fclose($file);
+
+	$filename2 = "dist/other.txt";
+	$file2 = fopen($filename2, "a");
+
+	foreach($split as $key => $value) {
+		if($value != "") {
+			fwrite($file2, $value . "\n");
+		}
+	}
+
+	fclose($file2);
+
+	// Delete old calendar_dates.txt
+    if (unlink($filename)) {
+    	var_dump("Deleted calendar_dates.txt");
+    }
+
+    // Rename temporary file so we have a new calendar_dates.txt
+    rename($filename2, $filename);
+    var_dump("New calendar_dates.txt is ready.");
+}
+
 function addCalendarDate($service_id, $date, $exception_type) {
 	global $file_calendar_dates;
 
@@ -315,5 +345,6 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
 	}
 }
 
-
+// Delete duplicates
+deleteDuplicates();
 
