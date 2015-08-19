@@ -562,10 +562,10 @@ class RouteFetcher {
             if (isset($match["alternative"])) {
                 $stationName = self::getAlternativeName($match["alternative"], $language);
             } else {
-                $stationName = NULL;
+                $stationName = null;
             }
 
-            if ($stationName == NULL) {
+            if ($stationName == null) {
                 // Use the standardName
                 $stationName = $match["name"];
             }
@@ -598,7 +598,7 @@ class RouteFetcher {
             }
         }
 
-        return NULL;
+        return null;
     }
 }
 
