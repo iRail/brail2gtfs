@@ -119,7 +119,7 @@ class RouteFetcher {
                     $departureStation = $stop_name;
                 } 
                 // Last stop
-                else if ($i == count($nodes)-1) {
+                elseif ($i == count($nodes)-1) {
                     // only arrival
                     $arrivalTime = array_shift($node->children[1]->children[0]->nodes[0]->_);
                     $departureTime = $arrivalTime;
@@ -439,25 +439,25 @@ class RouteFetcher {
         // Hardcoded some stations that NMBS gives different names to
         if ($query == 'Frankfurt Main (d)') {
             $query = 'Frankfurt am Main Flughafen';
-        } else if ($query == 'Frankfurt Flugh (d)') {
+        } elseif ($query == 'Frankfurt Flugh (d)') {
             $query = 'Frankfurt am Main Hbf';
-        } else if ($query == 'Ettelbruck (l)') {
+        } elseif ($query == 'Ettelbruck (l)') {
             $query = 'Ettelbréck';
-        } else if ($query == 'Kautenbach (l)') {
+        } elseif ($query == 'Kautenbach (l)') {
             $query = 'Kautebaach';
-        } else if ($query == 'Koln Hbf (d)') {
+        } elseif ($query == 'Koln Hbf (d)') {
             $query = 'Köln Hbf';
-        } else if ($query == 'Capellen (l)') {
+        } elseif ($query == 'Capellen (l)') {
             $query = 'Kapellen';
-        } else if ($query == 'Kleinbettingen (l)') {
+        } elseif ($query == 'Kleinbettingen (l)') {
             $query = 'Klengbetten';
-        } else if ($query == 'Aeroport Cdg Tgv (f)') {
+        } elseif ($query == 'Aeroport Cdg Tgv (f)') {
             $query = 'Aéroport Charles-de-Gaulle TGV';
-        } else if ($query == 'Tgv Haute Picardie (f)') {
+        } elseif ($query == 'Tgv Haute Picardie (f)') {
             $query = 'Haute-Picardie TGV';
-        } else if ($query == 'Duesseldorf Hbf (d)') {
+        } elseif ($query == 'Duesseldorf Hbf (d)') {
             $query = 'Düsseldorf Hbf';
-        } else if ($query == 'Croix L Allumette (f)') {
+        } elseif ($query == 'Croix L Allumette (f)') {
             $query = "Croix l'Allumette";
         }
 
