@@ -81,8 +81,8 @@ class RouteFetcher {
                 }
             } else {
                 $log->addError('Train not driving: ' . $shortName . ' on ' . $date . "\n");
-                $serviceId_date_pair = array();
-                $pair = array($service_id, $dateGTFS);
+                $serviceId_date_pair = [];
+                $pair = [$service_id, $dateGTFS];
                 array_push($serviceId_date_pair, $pair);
             }
         } else {
@@ -266,14 +266,14 @@ class RouteFetcher {
      */
     static function drives($url)
     {
-        $request_options = array(
+        $request_options = [
                 "timeout" => "30",
                 "useragent" => "iRail.be by Project iRail",
-                );
+                ];
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
         curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
@@ -370,10 +370,10 @@ class RouteFetcher {
      */
     static function getServerData($date, $shortName, $language)
     {
-        $request_options = array(
+        $request_options = [
             "timeout" => "30",
             "useragent" => "GTFS by Project iRail",
-        );
+        ];
 
         $scrapeURL = "http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/" . $language . "ld=std&seqnr=1&ident=at.02043113.1429435556&";
 
@@ -382,7 +382,7 @@ class RouteFetcher {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $scrapeURL);
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
@@ -400,14 +400,14 @@ class RouteFetcher {
      */
     static function getServerDataByUrl($scrapeURL)
     {
-        $request_options = array(
+        $request_options = [
             "timeout" => "30",
             "useragent" => "GTFS by Project iRail",
-        );
+        ];
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));   
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
         curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
@@ -470,7 +470,7 @@ class RouteFetcher {
         $newstations = new \stdClass;
         $newstations->{"@id"} = $stations["@id"];
         $newstations->{"@context"} = $stations["@context"];
-        $newstations->{"@graph"} = array();
+        $newstations->{"@graph"} = [];
         
         //make sure something between brackets is ignored
         $query = preg_replace("/\s?\(.*?\)/i", "", $query);
@@ -523,7 +523,7 @@ class RouteFetcher {
      */
     static function normalizeAccents($str)
     {
-        $unwanted_array = array(
+        $unwanted_array = [
             'Š' => 'S', 'š' => 's', 'Ž' => 'Z', 'ž' => 'z',
             'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A',
             'Ä' => 'A', 'Å' => 'A', 'Æ' => 'A', 'Ç' => 'C',
@@ -541,11 +541,17 @@ class RouteFetcher {
             'ö' => 'o', 'ø' => 'o', 'ù' => 'u', 'ú' => 'u',
             'û' => 'u', 'ý' => 'y', 'ý' => 'y', 'þ' => 'b',
             'ÿ' => 'y'
-        );
+        ];
         
         return strtr($str, $unwanted_array);
     }
 
+    /**
+     * @param $matches
+     * @param $stop_name
+     * @param $language
+     * @return string
+     */
     static function getBestMatchId($matches, $stop_name, $language)
     {
         $max_percent = 0; // Percentage of similarity of the best match
