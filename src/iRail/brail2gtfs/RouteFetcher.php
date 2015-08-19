@@ -1,6 +1,7 @@
 <?php
 /**
- * This script converts takes the list of routes (routes_info.tmp.txt) which has been collected in script 2-calendar_dates.txt.php into route and stop_time entries
+ * This script converts takes the list of routes (routes_info.tmp.txt)
+ * which has been collected in script 2-calendar_dates.txt.php into route and stop_time entries
  * 
  *
  * @author Brecht Van de Vyvere <brecht@iRail.be>
