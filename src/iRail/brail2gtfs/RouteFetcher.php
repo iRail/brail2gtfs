@@ -204,7 +204,7 @@ class RouteFetcher {
                         $matches = self::getMatches($stations, $stop_name);
                         $stop_id = self::getBestMatchId($matches, $stop_name, $language);
 
-                        if (preg_match("/NMBS\/(\d+)/i", $stop_id,$matches)) {
+                        if (preg_match("/NMBS\/(\d+)/i", $stop_id, $matches)) {
                             $stop_id = 'stops:' . $matches[1];
                         }
                     }
@@ -303,11 +303,11 @@ class RouteFetcher {
             $node_two = array_shift($nodes);
 
             // 
-            $route_short_name_one = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+            $route_short_name_one = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr{"alt"});
             $destination_one = array_shift($node->children[2]->nodes[0]->_);
             $url_one = array_shift($node->children[0]->children[0]->{'attr'});
 
-            $route_short_name_two = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+            $route_short_name_two = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr{"alt"});
             $destination_two = array_shift($node->children[2]->nodes[0]->_);
             $url_two = array_shift($node->children[0]->children[0]->{'attr'});
             } else {
