@@ -6,13 +6,13 @@
 * Possible languages: Dutch, English, French and German (currently only Dutch has been tested)
 * Always leave one language uncommented
 */
-return array(
-    'start_date' => '01-01-2015',
-    'end_date' => '14-12-2015',
+return [
+    'start_date'   => '01-01-2015',
+    'end_date'     => '14-12-2015',
     'feed_version' => '1.0',
-    'shortNames' => array("IC", "ICE", "L", "P", "TGV", "THA", "TRN", "EXT"),
-    'language' => 'nl' // Dutch
+    'shortNames'   => ['IC', 'ICE', 'L', 'P', 'TGV', 'THA', 'TRN', 'EXT'],
+    'language'     => 'nl', // Dutch
     // 'language' => 'en' // English
     // 'language' => 'fr' // French
     // 'language' => 'de' // German
-);
+];
