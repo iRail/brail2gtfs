@@ -59,15 +59,27 @@ function getData($serverData, $date, $shortName) {
     if (isset($html->getElementsByTagName('table')->children)) {
 	    $nodes = $html->getElementsByTagName('table')->children;
 
-	    array_shift($nodes); // First node is header, so skip
-	    while (count($nodes) > 0) {
-	        $node = array_shift($nodes);
+	    $first = true;
+	    // First node is just the header
+	    array_shift($nodes);
+
+        while (count($nodes) > 0) {
 	        $route_info = array();
 
-	        $route_short_name = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
-	        $destination = array_shift($node->children[2]->nodes[0]->_);
-			$VTString = array_shift($node->children[4]->nodes[0]->_);
-			$url = array_shift($node->children[0]->children[0]->{'attr'});
+	        if ($first) {
+		        $node = array_shift($nodes);
+	        	$first = false;
+		        $route_short_name = preg_replace('/\s+/', '',$node->children[0]->children[0]->children[0]->attr{"alt"});
+		        $destination = array_shift($node->children[2]->nodes[0]->_);
+				$VTString = array_shift($node->children[4]->nodes[0]->_);
+				$url = array_shift($node->children[0]->children[0]->{'attr'});
+			} else {
+				// Because the value is already array_shifted
+				$route_short_name = $next_route_short_name;
+				$destination = $next_destination;
+				$VTString = $next_VTString;
+				$url = $next_url;
+			}
 
 			// Next node. Needed for splitted trains
 			if(count($nodes) > 0) {
@@ -84,55 +96,60 @@ function getData($serverData, $date, $shortName) {
 			}
 
        		$drives = true;
-
-	        // Filter out busses and others
-	        if (substr($route_short_name,0,strlen($shortName)) == $shortName && substr($route_short_name,0,3) != 'Bus') {
-	        	// Route splits: two different destinations
-	        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
-	        		// route is split in two routes: we'll check both
-	        		// First check if this route is really driving this day (bug in NMBS website)
-	        		if (drives($url)) {
-	        			// Check if this train splits by searching for other route_id
-	        			// If not found, this is the main train
-		        		$split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
-		        		if ($split_route_short_name != NULL) {
-		        			// E.g. IC 1528 -> IC 1628 to Blankenberge
-		        			checkServiceId($split_route_short_name, $date, $VTString);
+       		// ICE trains are parsed seperately from IC
+       		if ($shortName == "IC" && substr($route_short_name,0,3) == 'ICE') {
+       			// Don't add
+       		} else {
+		        // Filter out busses and others
+		        if (substr($route_short_name,0,strlen($shortName)) == $shortName && substr($route_short_name,0,3) != 'Bus') {
+		        	// Route splits: two different destinations
+		        	if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
+		        		// route is split in two routes: we'll check both
+		        		// First check if this route is really driving this day (bug in NMBS website)
+		        		if (drives($url)) {
+		        			// Check if this train splits by searching for other route_id
+		        			// If not found, this is the main train
+			        		$split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
+			        		if ($split_route_short_name != NULL) {
+			        			// E.g. IC 1528 -> IC 1628 to Blankenberge
+			        			checkServiceId($split_route_short_name, $date, $VTString);
+			        		} else {
+			        			// Check second route
+			        			if (drives($next_url)) {
+				        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+					        		if ($split_route_short_name != NULL) {
+					        			// E.g. IC 1528 -> IC 1628 to Blankenberge
+					        			checkServiceId($split_route_short_name, $date, $VTString);
+					        		} else {
+				        				$drives = false;
+					        		}
+				        		}
+			        		}
 		        		} else {
-		        			// Check second route
+		        			// Check second url
 		        			if (drives($next_url)) {
 			        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
 				        		if ($split_route_short_name != NULL) {
 				        			// E.g. IC 1528 -> IC 1628 to Blankenberge
 				        			checkServiceId($split_route_short_name, $date, $VTString);
 				        		} else {
-			        				$drives = false;
+				        			checkServiceId($route_short_name, $date, $VTString);
 				        		}
-			        		}
+				        	} else {
+				        		$drives = false;
+				        	}
 		        		}
-	        		} else {
-	        			// Check second url
-	        			if (drives($next_url)) {
-		        			$split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
-			        		if ($split_route_short_name != NULL) {
-			        			// E.g. IC 1528 -> IC 1628 to Blankenberge
-			        			checkServiceId($split_route_short_name, $date, $VTString);
-			        		} else {
-			        			checkServiceId($route_short_name, $date, $VTString);
-			        		}
-			        	} else {
-			        		$drives = false;
-			        	}
-	        		}
-	        	}
-	        	if ($drives && $route_short_name != $previous_route_short_name) {
-    				checkServiceId($route_short_name, $date, $VTString);
-        		}
-	        }
+		        	}
 
-			$previous_route_short_name = $route_short_name;
-			$previous_destination = $destination;
-	    }
+		        	if ($drives && $route_short_name != $previous_route_short_name) {
+	    				checkServiceId($route_short_name, $date, $VTString);
+	        		}
+
+	        		$previous_route_short_name = $route_short_name;
+					$previous_destination = $destination;
+		        }
+		    }
+		}
     }          
 }
 
@@ -153,6 +170,7 @@ function drives($url) {
     curl_close ($ch);
 
     $html = str_get_html($result);
+
     $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
 
     return is_object($test);
