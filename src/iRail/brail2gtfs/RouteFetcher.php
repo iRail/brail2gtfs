@@ -28,7 +28,7 @@ class RouteFetcher
      * @param $language
      * @return array
      */
-    static function fetchRouteAndStopTimes($shortName, $date, $trip_id, $service_id, $language)
+    static public function fetchRouteAndStopTimes($shortName, $date, $trip_id, $service_id, $language)
     {
         date_default_timezone_set('UTC');
 
@@ -51,7 +51,7 @@ class RouteFetcher
      * @param $language
      * @return array
      */
-    static function fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language)
+    static public function fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language)
     {
         var_dump($shortName);
         var_dump($date);
@@ -272,7 +272,7 @@ class RouteFetcher
      * @param $url
      * @return bool
      */
-    static function drives($url)
+    static public function drives($url)
     {
         $request_options = [
             "timeout" => "30",
@@ -299,7 +299,7 @@ class RouteFetcher
      *
      * @param $serverData
      */
-    static function hasDifferentDestination($serverData)
+    static public function hasDifferentDestination($serverData)
     {
         $html = str_get_html($serverData);
 
@@ -333,7 +333,7 @@ class RouteFetcher
      * @param $arrivalStation
      * @return array
      */
-    static function generateRouteEntry($shortName, $departureStation, $arrivalStation)
+    static public function generateRouteEntry($shortName, $departureStation, $arrivalStation)
     {
         $route_entry = [
             "@id" => "routes:" . $shortName,
@@ -355,7 +355,7 @@ class RouteFetcher
      * @param $stop_sequence
      * @return array
      */
-    static function generateStopTimesEntry($trip_id, $arrival_time, $departure_time, $stop_id, $stop_sequence)
+    static public function generateStopTimesEntry($trip_id, $arrival_time, $departure_time, $stop_id, $stop_sequence)
     {
         $stoptimes_entry = [
             "gtfs:trip" => $trip_id,
@@ -376,7 +376,7 @@ class RouteFetcher
      * @param $language
      * @return mixed
      */
-    static function getServerData($date, $shortName, $language)
+    static public function getServerData($date, $shortName, $language)
     {
         $request_options = [
             "timeout" => "30",
@@ -406,7 +406,7 @@ class RouteFetcher
      * @param $scrapeURL
      * @return mixed
      */
-    static function getServerDataByUrl($scrapeURL)
+    static public function getServerDataByUrl($scrapeURL)
     {
         $request_options = [
             "timeout" => "30",
@@ -426,7 +426,7 @@ class RouteFetcher
         return $result;
     }
 
-    static function getStations()
+    static public function getStations()
     {
         $client = new Client();
         $url = "https://irail.be/stations/NMBS";
@@ -442,7 +442,7 @@ class RouteFetcher
     }
 
     // Stations as parameter, so we have to load it once
-    static function getMatches($stations, $query)
+    static public function getMatches($stations, $query)
     {
         // Hardcoded some stations that NMBS gives different names to
         if ($query == 'Frankfurt Main (d)') {
@@ -529,7 +529,7 @@ class RouteFetcher
      * We have to take into account that some words may have accents
      * Taken from https://stackoverflow.com/questions/3371697/replacing-accented-characters-php
      */
-    static function normalizeAccents($str)
+    static public function normalizeAccents($str)
     {
         $unwanted_array = [
             'Š' => 'S', 'š' => 's', 'Ž' => 'Z', 'ž' => 'z',
@@ -560,7 +560,7 @@ class RouteFetcher
      * @param $language
      * @return string
      */
-    static function getBestMatchId($matches, $stop_name, $language)
+    static public function getBestMatchId($matches, $stop_name, $language)
     {
         $max_percent = 0; // Percentage of similarity of the best match
         $stop_id = "";
@@ -593,7 +593,7 @@ class RouteFetcher
      * @param $language
      * @return null
      */
-    static function getAlternativeName($stationsByLang, $language)
+    static public function getAlternativeName($stationsByLang, $language)
     {
         // Dutch
         if ($language == "nn") {
