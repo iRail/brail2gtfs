@@ -24,7 +24,7 @@ $language = $configs['language'];
 $serviceId_date_pairs = array(); // All the trips don't drive go in here
 
 // Returns hashmap. Key: route_id - Value: array of dates with a distinct service_id
-public function init() {
+function init() {
 	global $serviceId_date_pairs;
 	$hashmap = array(); // holds route_short_name => array of dates
 	$checkRouteAdd = array(); // holds route_id => bool if added to routes.txt
@@ -67,7 +67,7 @@ public function init() {
 	}
 }
 
-public function checkForServiceId($dateServiceIdPairs, $service_id) {
+function checkForServiceId($dateServiceIdPairs, $service_id) {
 	$contains = false;
 
 	foreach ($dateServiceIdPairs as $pair) {
@@ -83,7 +83,7 @@ public function checkForServiceId($dateServiceIdPairs, $service_id) {
 }
 
 // this function uses the routefetcher to check if there's a trip driving on a certain day by a route
-public function getServiceIdDatePair($route_short_name, $service_id, $date) {
+function getServiceIdDatePair($route_short_name, $service_id, $date) {
 	global $checkRouteAdd;
 
 	// 1 - 1 mapping
@@ -114,7 +114,7 @@ public function getServiceIdDatePair($route_short_name, $service_id, $date) {
 
 // Some services don't drive so those have to be deleted from calendar_dates.txt
 // To do this, we generate a temporary file where we put all the services that drive
-public function makeCorrectCalendarDates($serviceId_date_pairs) {
+function makeCorrectCalendarDates($serviceId_date_pairs) {
 	global $file_temp, $file_calendar_dates;
 
 	if(($handleRead = fopen($file_calendar_dates, 'r')) !== false && ($handleWrite = fopen($file_temp, 'w')) !== false)
@@ -166,7 +166,7 @@ public function makeCorrectCalendarDates($serviceId_date_pairs) {
 	}
 }
 
-public function getAllStops() {
+function getAllStops() {
 	global $file_stop_times;
 
 	 $allStops = array();
@@ -194,7 +194,7 @@ public function getAllStops() {
 	return $allStops;
 }
 
-public function findMissingStops($allStops) {
+function findMissingStops($allStops) {
 	global $file_stops;
 
 	$knownStops = array();
@@ -236,7 +236,7 @@ public function findMissingStops($allStops) {
 	return $missingStops;
 }
 
-public function addMissingStops($missingStops) {
+function addMissingStops($missingStops) {
 	global $file_stops;
 	$addedStops = array();
 
@@ -283,7 +283,7 @@ public function addMissingStops($missingStops) {
 	}
 }
 
-public function isStopAdded($addedStops, $missing_stop_id) {
+function isStopAdded($addedStops, $missing_stop_id) {
 	$added = false;
 	foreach ($addedStops as $key => $stop_id) {
 		if ($stop_id == $missing_stop_id) {
@@ -294,7 +294,7 @@ public function isStopAdded($addedStops, $missing_stop_id) {
 	return $added;
 }
 
-public function generateTrip($shortName, $service_id, $trip_id) {
+function generateTrip($shortName, $service_id, $trip_id) {
 	$trip_entry = [
         "@id" => $trip_id, //Sadly, this is only a local identifier
         "@type" => "gtfs:Trip",
@@ -305,11 +305,11 @@ public function generateTrip($shortName, $service_id, $trip_id) {
     return $trip_entry;
 }
 
-public function appendCSV($dist, $csv) {
+function appendCSV($dist, $csv) {
 	file_put_contents($dist, trim($csv).PHP_EOL, FILE_APPEND);
 }
 
-public function addRoute($route_entry) {
+function addRoute($route_entry) {
 	$csv = "";
 	$csv .= $route_entry["@id"] . ","; // route_id
 	$csv .= $route_entry["gtfs:agency"] . ","; // agency_id
@@ -321,7 +321,7 @@ public function addRoute($route_entry) {
 	appendCSV($file_routes,$csv);
 }
 
-public function addTrip($trip) {
+function addTrip($trip) {
 	$csv = "";
 	$csv .= $trip["gtfs:route"] . ","; // route_id
 	$csv .= $trip["gtfs:service"] . ","; // service_id
@@ -331,7 +331,7 @@ public function addTrip($trip) {
 	appendCSV($file_trips,$csv);
 }
 
-public function addStopTimes($stop_times) {
+function addStopTimes($stop_times) {
 	foreach($stop_times as $stop_time) {
 		$csv = "";
 		$csv .= $stop_time["gtfs:trip"] . ","; // trip_id
@@ -345,7 +345,7 @@ public function addStopTimes($stop_times) {
 	}
 }
 
-public function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $platform_code, $parent_station, $location_type) {
+function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $platform_code, $parent_station, $location_type) {
 	global $file_stops; 
 
 	$csv = "";
@@ -360,7 +360,7 @@ public function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $platform_co
 	appendCSV($file_stops,$csv);
 }
 
-public function makeHeaders() {
+function makeHeaders() {
 	global $file_routes, $file_trips, $file_stop_times;
 
 	// routes.txt
