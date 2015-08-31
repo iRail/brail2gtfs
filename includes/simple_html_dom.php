@@ -116,6 +116,9 @@ class simple_html_dom_node {
     public $tag_start = 0;
     private $dom = null;
 
+    /**
+     * @param simple_html_dom $dom
+     */
     function __construct($dom)
     {
         $this->dom = $dom;
@@ -1216,6 +1219,11 @@ class simple_html_dom {
     }
 
     // parse attributes
+
+    /**
+     * @param simple_html_dom_node $node
+     * @param string[] $space
+     */
     protected function parse_attr($node, $name, &$space) {
         // Per sourceforge: http://sourceforge.net/tracker/?func=detail&aid=3061408&group_id=218559&atid=1044037
         // If the attribute is already defined inside a tag, only pay atetntion to the first one as opposed to the last one.
@@ -1252,6 +1260,11 @@ class simple_html_dom {
     }
 
     // link node's parent
+
+    /**
+     * @param simple_html_dom_node $node
+     * @param boolean $is_child
+     */
     protected function link_nodes(&$node, $is_child) {
         $node->parent = $this->parent;
         $this->parent->nodes[] = $node;
@@ -1260,6 +1273,10 @@ class simple_html_dom {
     }
 
     // as a text node
+
+    /**
+     * @param string $tag
+     */
     protected function as_text_node($tag) {
         $node = new simple_html_dom_node($this);
         ++$this->cursor;
@@ -1269,11 +1286,17 @@ class simple_html_dom {
         return true;
     }
 
+    /**
+     * @param string $chars
+     */
     protected function skip($chars) {
         $this->pos += strspn($this->doc, $chars, $this->pos);
         $this->char = ($this->pos<$this->size) ? $this->doc[$this->pos] : null; // next
     }
 
+    /**
+     * @param string $chars
+     */
     protected function copy_skip($chars) {
         $pos = $this->pos;
         $len = strspn($this->doc, $chars, $pos);
@@ -1283,6 +1306,9 @@ class simple_html_dom {
         return substr($this->doc, $pos, $len);
     }
 
+    /**
+     * @param string $chars
+     */
     protected function copy_until($chars) {
         $pos = $this->pos;
         $len = strcspn($this->doc, $chars, $pos);
@@ -1291,6 +1317,9 @@ class simple_html_dom {
         return substr($this->doc, $pos, $len);
     }
 
+    /**
+     * @param string $char
+     */
     protected function copy_until_char($char) {
         if ($this->char===null) return '';
 
@@ -1308,6 +1337,9 @@ class simple_html_dom {
         return substr($this->doc, $pos_old, $pos-$pos_old);
     }
 
+    /**
+     * @param string $char
+     */
     protected function copy_until_char_escape($char) {
         if ($this->char===null) return '';
 
@@ -1335,6 +1367,10 @@ class simple_html_dom {
     }
 
     // remove noise from html content
+
+    /**
+     * @param string $pattern
+     */
     protected function remove_noise($pattern, $remove_tag=false) {
         $count = preg_match_all($pattern, $this->doc, $matches, PREG_SET_ORDER|PREG_OFFSET_CAPTURE);
 
@@ -1351,6 +1387,10 @@ class simple_html_dom {
     }
 
     // restore noise to html content
+
+    /**
+     * @param string|null $text
+     */
     function restore_noise($text) {
         while (($pos=strpos($text, '___noise___'))!==false) {
             $key = '___noise___'.$text[$pos+11].$text[$pos+12].$text[$pos+13];
@@ -1383,9 +1423,21 @@ class simple_html_dom {
     function childNodes($idx=-1) {return $this->root->childNodes($idx);}
     function firstChild() {return $this->root->first_child();}
     function lastChild() {return $this->root->last_child();}
+
+    /**
+     * @param string $id
+     */
     function getElementById($id) {return $this->find("#$id", 0);}
     function getElementsById($id, $idx=null) {return $this->find("#$id", $idx);}
+
+    /**
+     * @param string $name
+     */
     function getElementByTagName($name) {return $this->find($name, 0);}
+
+    /**
+     * @param string $name
+     */
     function getElementsByTagName($name, $idx=-1) {return $this->find($name, $idx);}
     function loadFile() {$args = func_get_args();$this->load_file($args);}
 }
