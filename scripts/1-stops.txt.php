@@ -76,7 +76,7 @@ function getNumberAndLetterPairOfPlatforms($stationId)
     $maxLetter = null;
 
     $test = $html->getElementById('hfs_content');
-    if (!is_object($test)) {
+    if (! is_object($test)) {
         var_dump('No connection or bad response.');
     } else {
         $nodes = $html->getElementById('hfs_content')->children;

@@ -72,7 +72,7 @@ class RouteFetcher
         $html = str_get_html($serverData);
 
         $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
-        if (!is_object($test)) {
+        if (! is_object($test)) {
             // Trainroute splits. Route_id is of the main train, so take the link that drives
             if (is_object($html->getElementByTagName('table'))) {
                 $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{'attr'});
@@ -103,7 +103,7 @@ class RouteFetcher
             $i = 1; // Pointer to node
             while (count($nodes) > $i) {
                 $node = $nodes[$i];
-                if (!count($node->attr)) {
+                if (! count($node->attr)) {
                     $i++;
                     continue; // row with no class-attribute contain no data
                 }
