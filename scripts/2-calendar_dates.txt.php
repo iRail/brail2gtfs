@@ -225,7 +225,7 @@ function getSplitTrainRouteId($html)
         }
     }
 
-    return null; // No name for the splitted train
+    return; // No name for the splitted train
 }
 
 function checkServiceId($route_short_name, $date, $VTString)
@@ -291,7 +291,7 @@ function getServiceId($route_short_name, $VTString)
         }
     }
 
-    return null; // Something went wrong
+    return; // Something went wrong
 }
 
 function addCalendarDate($service_id, $date, $exception_type)
