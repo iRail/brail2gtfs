@@ -3,8 +3,7 @@
 /**
  * This script populates the following GTFS files: routes.txt, trips.txt, stop_times.txt and the missing stops in stops.txt.
  *
- * @author Brecht Van de Vyvere <brecht@iRail.be>
- * @author Pieter Colpaert <pieter@iRail.be>
+ * @author Brecht Van de Vyvere <brecht@iRail.be> | Pieter Colpaert <pieter@iRail.be>
  * @license MIT
  */
 require 'vendor/autoload.php';

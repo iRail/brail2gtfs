@@ -217,13 +217,15 @@ class RouteFetcher
                 if (count($node->children) == 6) {
                     $platform = trim(array_shift($node->children[5]->nodes[0]->_));
                     if ($platform == '&nbsp;') {
-                        $platform = ':0';
+                        $platform = '0';
+                        $stop_id .= ':' . $platform;
                     } else {
                         // Add platform to stop_id
                         $stop_id .= ':'.$platform;
                     }
                 } else {
-                    $platform = ':0';
+                    $platform = '0';
+                    $stop_id .= ':' . $platform;
                 }
 
                 // Can happen

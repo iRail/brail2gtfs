@@ -63,7 +63,7 @@ define('DEFAULT_BR_TEXT', "\r\n");
 // -----------------------------------------------------------------------------
 // get html dom from file
 // $maxlen is defined in the code as PHP_STREAM_COPY_ALL which is defined as -1.
-function file_get_html($url, $use_include_path = false, $context = null, $offset = -1, $maxLen = -1, $lowercase = true, $forceTagsClosed = true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN = true, $defaultBRText = DEFAULT_BR_TEXT)
+function file_get_html($url, $use_include_path = false, $context = null, $offset = -1, $lowercase = true, $forceTagsClosed = true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN = true, $defaultBRText = DEFAULT_BR_TEXT)
 {
     // We DO force the tags to be terminated.
     $dom = new simple_html_dom(null, $lowercase, $forceTagsClosed, $target_charset, $defaultBRText);
@@ -117,7 +117,10 @@ class simple_html_dom_node
     public $tag_start = 0;
     private $dom = null;
 
-    public function __construct($dom)
+    /**
+     * @param simple_html_dom $dom
+     */
+    function __construct($dom)
     {
         $this->dom = $dom;
         $dom->nodes[] = $this;
@@ -1410,9 +1413,12 @@ class simple_html_dom
         return true;
     }
 
-    // parse attributes
-    protected function parse_attr($node, $name, &$space)
-    {
+    /**
+     * parse attributes
+     * @param simple_html_dom_node $node
+     * @param string[] $space
+     */
+    protected function parse_attr($node, $name, &$space) {
         // Per sourceforge: http://sourceforge.net/tracker/?func=detail&aid=3061408&group_id=218559&atid=1044037
         // If the attribute is already defined inside a tag, only pay atetntion to the first one as opposed to the last one.
         if (isset($node->attr[$name])) {
@@ -1446,9 +1452,12 @@ class simple_html_dom
         }
     }
 
-    // link node's parent
-    protected function link_nodes(&$node, $is_child)
-    {
+    /**
+     * link node's parent
+     * @param simple_html_dom_node $node
+     * @param boolean $is_child
+     */
+    protected function link_nodes(&$node, $is_child) {
         $node->parent = $this->parent;
         $this->parent->nodes[] = $node;
         if ($is_child) {
@@ -1456,9 +1465,11 @@ class simple_html_dom
         }
     }
 
-    // as a text node
-    protected function as_text_node($tag)
-    {
+    /**
+     * as a text node
+     * @param string $tag
+     */
+    protected function as_text_node($tag) {
         $node = new simple_html_dom_node($this);
         ++$this->cursor;
         $node->_[HDOM_INFO_TEXT] = '</'.$tag.'>';
@@ -1467,14 +1478,18 @@ class simple_html_dom
         return true;
     }
 
-    protected function skip($chars)
-    {
+    /**
+     * @param string $chars
+     */
+    protected function skip($chars) {
         $this->pos += strspn($this->doc, $chars, $this->pos);
         $this->char = ($this->pos < $this->size) ? $this->doc[$this->pos] : null; // next
     }
 
-    protected function copy_skip($chars)
-    {
+    /**
+     * @param string $chars
+     */
+    protected function copy_skip($chars) {
         $pos = $this->pos;
         $len = strspn($this->doc, $chars, $pos);
         $this->pos += $len;
@@ -1486,8 +1501,10 @@ class simple_html_dom
         return substr($this->doc, $pos, $len);
     }
 
-    protected function copy_until($chars)
-    {
+    /**
+     * @param string $chars
+     */
+    protected function copy_until($chars) {
         $pos = $this->pos;
         $len = strcspn($this->doc, $chars, $pos);
         $this->pos += $len;
@@ -1495,11 +1512,11 @@ class simple_html_dom
         return substr($this->doc, $pos, $len);
     }
 
-    protected function copy_until_char($char)
-    {
-        if ($this->char === null) {
-            return '';
-        }
+    /**
+     * @param string $char
+     */
+    protected function copy_until_char($char) {
+        if ($this->char===null) return '';
 
         if (($pos = strpos($this->doc, $char, $this->pos)) === false) {
             $ret = substr($this->doc, $this->pos, $this->size - $this->pos);
@@ -1519,11 +1536,11 @@ class simple_html_dom
         return substr($this->doc, $pos_old, $pos - $pos_old);
     }
 
-    protected function copy_until_char_escape($char)
-    {
-        if ($this->char === null) {
-            return '';
-        }
+    /**
+     * @param string $char
+     */
+    protected function copy_until_char_escape($char) {
+        if ($this->char===null) return '';
 
         $start = $this->pos;
         while (1) {
@@ -1552,10 +1569,12 @@ class simple_html_dom
         }
     }
 
-    // remove noise from html content
-    protected function remove_noise($pattern, $remove_tag = false)
-    {
-        $count = preg_match_all($pattern, $this->doc, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+    /**
+     * remove noise from html content
+     * @param string $pattern
+     */
+    protected function remove_noise($pattern, $remove_tag=false) {
+        $count = preg_match_all($pattern, $this->doc, $matches, PREG_SET_ORDER|PREG_OFFSET_CAPTURE);
 
         for ($i = $count - 1; $i > -1; --$i) {
             $key = '___noise___'.sprintf('% 3d', count($this->noise) + 100);
@@ -1571,14 +1590,15 @@ class simple_html_dom
         }
     }
 
-    // restore noise to html content
-    public function restore_noise($text)
-    {
-        while (($pos = strpos($text, '___noise___')) !== false) {
-            $key = '___noise___'.$text[$pos + 11].$text[$pos + 12].$text[$pos + 13];
-            if (isset($this->noise[$key])) {
-                $text = substr($text, 0, $pos).$this->noise[$key].substr($text, $pos + 14);
-            }
+    /**
+     * restore noise to html content
+     * @param string|null $text
+     */
+    function restore_noise($text) {
+        while (($pos=strpos($text, '___noise___'))!==false) {
+            $key = '___noise___'.$text[$pos+11].$text[$pos+12].$text[$pos+13];
+            if (isset($this->noise[$key]))
+                $text = substr($text, 0, $pos).$this->noise[$key].substr($text, $pos+14);
         }
 
         return $text;
@@ -1606,37 +1626,24 @@ class simple_html_dom
     }
 
     // camel naming conventions
-    public function childNodes($idx = -1)
-    {
-        return $this->root->childNodes($idx);
-    }
-    public function firstChild()
-    {
-        return $this->root->first_child();
-    }
-    public function lastChild()
-    {
-        return $this->root->last_child();
-    }
-    public function getElementById($id)
-    {
-        return $this->find("#$id", 0);
-    }
-    public function getElementsById($id, $idx = null)
-    {
-        return $this->find("#$id", $idx);
-    }
-    public function getElementByTagName($name)
-    {
-        return $this->find($name, 0);
-    }
-    public function getElementsByTagName($name, $idx = -1)
-    {
-        return $this->find($name, $idx);
-    }
-    public function loadFile()
-    {
-        $args = func_get_args();
-        $this->load_file($args);
-    }
+    function childNodes($idx=-1) {return $this->root->childNodes($idx);}
+    function firstChild() {return $this->root->first_child();}
+    function lastChild() {return $this->root->last_child();}
+
+    /**
+     * @param string $id
+     */
+    function getElementById($id) {return $this->find("#$id", 0);}
+    function getElementsById($id, $idx=null) {return $this->find("#$id", $idx);}
+
+    /**
+     * @param string $name
+     */
+    function getElementByTagName($name) {return $this->find($name, 0);}
+
+    /**
+     * @param string $name
+     */
+    function getElementsByTagName($name, $idx=-1) {return $this->find($name, $idx);}
+    function loadFile() {$args = func_get_args();$this->load_file($args);}
 }
