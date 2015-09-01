@@ -1,4 +1,5 @@
 # NMBS/SNCB to GTFS scraper
+![MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg) [![StyleCI](https://styleci.io/repos/35721042/shield)](https://styleci.io/repos/35721042) [![Join the chat at https://gitter.im/iRail/iRail](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iRail/iRail?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Scrapes the Belgian railways and generates GTFS files for the current year.
 
