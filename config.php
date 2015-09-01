@@ -13,6 +13,6 @@ return array(
     'shortNames' => array("IC", "ICE", "L", "P", "TGV", "THA", "TRN", "EXT"),
     'language' => 'nl' // Dutch
     // 'language' => 'en' // English
--   // 'language' => 'fr' // French
--   // 'language' => 'de' // German
+    // 'language' => 'fr' // French
+    // 'language' => 'de' // German
 );
