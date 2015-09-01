@@ -10,8 +10,6 @@ require 'vendor/autoload.php';
 include_once ("includes/simple_html_dom.php");
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Exception\ServerException;
 
 // set the default timezone to use. Available since PHP 5.1
 date_default_timezone_set('UTC');
