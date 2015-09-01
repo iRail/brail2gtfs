@@ -212,7 +212,7 @@ function getSplitTrainRouteId($html)
     $j = 0;
     for ($i = 2; $i < count($nodes); $i++) {
         $node = $nodes[$i];
-        if (!count($node->attr)) {
+        if (! count($node->attr)) {
             continue;
         } // row with no class-attribute contain no data
 
@@ -242,12 +242,12 @@ function checkServiceId($route_short_name, $date, $VTString)
     $toAddServiceId = '';
 
     // If VTString isn't already added, make new service_id and add to hashmap
-    if (!isVTStringAlreadyAdded($service_vtstring_array, $VTString)) {
+    if (! isVTStringAlreadyAdded($service_vtstring_array, $VTString)) {
         $service_id++;
         $toAddServiceId = $service_id;
         $new_service_vtstring_pair = [$service_id, $VTString];
 
-        if (!isset($routes_info[$route_short_name])) {
+        if (! isset($routes_info[$route_short_name])) {
             $routes_info[$route_short_name] = [];
         }
         array_push($routes_info[$route_short_name], $new_service_vtstring_pair);

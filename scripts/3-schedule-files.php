@@ -40,12 +40,12 @@ function init()
             $service_id = $line[1];
             $date = $line[2];
 
-            if (!isset($hashmap[$route_short_name])) {
+            if (! isset($hashmap[$route_short_name])) {
                 $hashmap[$route_short_name] = [];
             }
 
             // Check if service_id has already been added
-            if (!checkForServiceId($hashmap[$route_short_name], $service_id)) {
+            if (! checkForServiceId($hashmap[$route_short_name], $service_id)) {
                 // Extra check that service is active that day
                 // To be 100% sure that all calendar_dates are driving, this should be called for all the calendar_dates
                 // But will take huge performance loss
@@ -97,7 +97,7 @@ function getServiceIdDatePair($route_short_name, $service_id, $date)
     if ($serviceId_date_pair == null && $route != null && $stop_times != null) {
         // Add already for performance
         // routes.txt
-        if (!isset($checkRouteAdd[$route_short_name])) {
+        if (! isset($checkRouteAdd[$route_short_name])) {
             addRoute($route);
             $checkRouteAdd[$route_short_name] = true;
         }
