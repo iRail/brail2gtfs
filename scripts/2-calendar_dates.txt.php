@@ -346,3 +346,6 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
         getData($serverData, $dateGTFS, $shortName);
     }
 }
+
+// Delete duplicates
+deleteDuplicates();

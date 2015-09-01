@@ -226,6 +226,11 @@ class RouteFetcher
                     $platform = ':0';
                 }
 
+                // Can happen
+                if ($departureTime == "") {
+                    $departureTime = $arrivalTime;
+                }
+
                 // Times must be eight digits in HH:MM:SS format
                 $arrivalTime .= ':00';
                 $departureTime .= ':00';
