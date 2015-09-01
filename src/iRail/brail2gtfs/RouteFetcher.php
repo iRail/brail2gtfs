@@ -1,34 +1,37 @@
 <?php
+
 /**
  * This script converts takes the list of routes (routes_info.tmp.txt)
- * which has been collected in script 2-calendar_dates.txt.php into route and stop_time entries
+ * which has been collected in script 2-calendar_dates.txt.php into route and stop_time entries.
  *
  *
  * @author Brecht Van de Vyvere <brecht@iRail.be>
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
  */
+
 namespace iRail\brail2gtfs;
 
-include_once("includes/simple_html_dom.php");
+include_once 'includes/simple_html_dom.php';
 
 use GuzzleHttp\Client;
-use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 class RouteFetcher
 {
-
     /**
-     * Fetch Route fetches for a specific date an array of: a route object and stop_times
+     * Fetch Route fetches for a specific date an array of: a route object and stop_times.
+     *
      * @param $shortName
      * @param $date
      * @param $trip_id
      * @param $service_id
      * @param $language
+     *
      * @return array
      */
-    static function fetchRouteAndStopTimes($shortName, $date, $trip_id, $service_id, $language)
+    public static function fetchRouteAndStopTimes($shortName, $date, $trip_id, $service_id, $language)
     {
         date_default_timezone_set('UTC');
 
@@ -49,9 +52,10 @@ class RouteFetcher
      * @param $date
      * @param $dateGTFS
      * @param $language
+     *
      * @return array
      */
-    static function fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language)
+    public static function fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language)
     {
         var_dump($shortName);
         var_dump($date);
@@ -71,24 +75,23 @@ class RouteFetcher
         if (!is_object($test)) {
             // Trainroute splits. Route_id is of the main train, so take the link that drives
             if (is_object($html->getElementByTagName('table'))) {
-                $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{"attr"});
+                $url = array_shift($html->getElementByTagName('table')->children[1]->children[0]->children[0]->{'attr'});
                 if (self::drives($url)) {
                     $serverData = self::getServerDataByUrl($url);
                     list($route_entry, $stopTimes, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language);
                 } else {
                     // Second url
-                    $url = array_shift($html->getElementByTagName('table')->children[2]->children[0]->children[0]->{"attr"});
+                    $url = array_shift($html->getElementByTagName('table')->children[2]->children[0]->children[0]->{'attr'});
                     $serverData = self::getServerDataByUrl($url);
                     list($route_entry, $stopTimes, $serviceId_date_pair) = self::fetchInfo($serverData, $shortName, $trip_id, $service_id, $date, $dateGTFS, $language);
                 }
             } else {
-                $log->addError('Train not driving: ' . $shortName . ' on ' . $date . "\n");
+                $log->addError('Train not driving: '.$shortName.' on '.$date."\n");
                 $serviceId_date_pair = [];
                 $pair = [$service_id, $dateGTFS];
                 array_push($serviceId_date_pair, $pair);
             }
         } else {
-
             $nodes = $html->getElementById('tq_trainroute_content_table_alteAnsicht')->getElementByTagName('table')->children;
 
             $stop_sequence = 1; // counter
@@ -145,15 +148,15 @@ class RouteFetcher
                 // Stop_id
                 // Can be parsed from the stop-URL
                 if (isset($node->children[3]->children[0])) {
-                    $link = $node->children[3]->children[0]->{"attr"}["href"];
+                    $link = $node->children[3]->children[0]->{'attr'}['href'];
                     // With capital C
-                    if (strpos($link, "StationId=")) {
-                        $nr = substr($link, strpos($link, "StationId=") + strlen("StationId="));
+                    if (strpos($link, 'StationId=')) {
+                        $nr = substr($link, strpos($link, 'StationId=') + strlen('StationId='));
                     } else {
-                        $nr = substr($link, strpos($link, "stationId=") + strlen("stationId="));
+                        $nr = substr($link, strpos($link, 'stationId=') + strlen('stationId='));
                     }
                     $nr = substr($nr, 0, strlen($nr) - 1); // delete ampersand on the end
-                    $stop_id = 'stops:' . '00' . $nr;
+                    $stop_id = 'stops:'.'00'.$nr;
                 } else {
                     // With foreign stations, there's a sometimes no URL available
                     // Find the stop_id with the stations.json
@@ -205,7 +208,7 @@ class RouteFetcher
                         $stop_id = self::getBestMatchId($matches, $stop_name, $language);
 
                         if (preg_match("/NMBS\/(\d+)/i", $stop_id, $matches)) {
-                            $stop_id = 'stops:' . $matches[1];
+                            $stop_id = 'stops:'.$matches[1];
                         }
                     }
                 }
@@ -217,7 +220,7 @@ class RouteFetcher
                         $platform = ':0';
                     } else {
                         // Add platform to stop_id
-                        $stop_id .= ':' . $platform;
+                        $stop_id .= ':'.$platform;
                     }
                 } else {
                     $platform = ':0';
@@ -245,10 +248,10 @@ class RouteFetcher
                     $borderTime = date_create_from_format('H:i:s', '00:00:00');
                     if ($arrivalDateTime <= $departureDateTime && $arrivalDateTime >= $borderTime) {
                         $temp = $arrivalDateTime;
-                        $arrivalTime = ($temp->format('H') + 24) . ':' . $temp->format('i:s');
+                        $arrivalTime = ($temp->format('H') + 24).':'.$temp->format('i:s');
                     }
                     $temp = $departureDateTime;
-                    $departureTime = ($temp->format('H') + 24) . ':' . $temp->format('i:s');
+                    $departureTime = ($temp->format('H') + 24).':'.$temp->format('i:s');
                 }
 
                 array_push($stopTimes, self::generateStopTimesEntry($trip_id, $arrivalTime, $departureTime, $stop_id, $stop_sequence));
@@ -268,21 +271,22 @@ class RouteFetcher
      * Scrapes one route.
      *
      * @param $url
+     *
      * @return bool
      */
-    static function drives($url)
+    public static function drives($url)
     {
         $request_options = [
-            "timeout" => "30",
-            "useragent" => "iRail.be by Project iRail",
+            'timeout'   => '30',
+            'useragent' => 'iRail.be by Project iRail',
         ];
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
-        curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
         $result = curl_exec($ch);
         curl_close($ch);
 
@@ -293,11 +297,11 @@ class RouteFetcher
     }
 
     /**
-     * Gets called when route is split
+     * Gets called when route is split.
      *
      * @param $serverData
      */
-    static function hasDifferentDestination($serverData)
+    public static function hasDifferentDestination($serverData)
     {
         $html = str_get_html($serverData);
 
@@ -307,12 +311,12 @@ class RouteFetcher
             $node_one = array_shift($nodes);
             $node_two = array_shift($nodes);
 
-            // 
-            $route_short_name_one = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr{"alt"});
+            //
+            $route_short_name_one = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr{'alt'});
             $destination_one = array_shift($node->children[2]->nodes[0]->_);
             $url_one = array_shift($node->children[0]->children[0]->{'attr'});
 
-            $route_short_name_two = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr{"alt"});
+            $route_short_name_two = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr{'alt'});
             $destination_two = array_shift($node->children[2]->nodes[0]->_);
             $url_two = array_shift($node->children[0]->children[0]->{'attr'});
         } else {
@@ -329,17 +333,18 @@ class RouteFetcher
      * @param $shortName
      * @param $departureStation
      * @param $arrivalStation
+     *
      * @return array
      */
-    static function generateRouteEntry($shortName, $departureStation, $arrivalStation)
+    public static function generateRouteEntry($shortName, $departureStation, $arrivalStation)
     {
         $route_entry = [
-            "@id" => "routes:" . $shortName,
-            "@type" => "gtfs:Route",
-            "gtfs:longName" => $departureStation . " - " . $arrivalStation,
-            "gtfs:shortName" => $shortName,
-            "gtfs:agency" => "0",
-            "gtfs:routeType" => "2" //→ 2 according to GTFS/CSV spec
+            '@id'            => 'routes:'.$shortName,
+            '@type'          => 'gtfs:Route',
+            'gtfs:longName'  => $departureStation.' - '.$arrivalStation,
+            'gtfs:shortName' => $shortName,
+            'gtfs:agency'    => '0',
+            'gtfs:routeType' => '2', //→ 2 according to GTFS/CSV spec
         ];
 
         return $route_entry;
@@ -351,16 +356,17 @@ class RouteFetcher
      * @param $departure_time
      * @param $stop_id
      * @param $stop_sequence
+     *
      * @return array
      */
-    static function generateStopTimesEntry($trip_id, $arrival_time, $departure_time, $stop_id, $stop_sequence)
+    public static function generateStopTimesEntry($trip_id, $arrival_time, $departure_time, $stop_id, $stop_sequence)
     {
         $stoptimes_entry = [
-            "gtfs:trip" => $trip_id,
-            "gtfs:arrivalTime" => $arrival_time,
-            "gtfs:departureTime" => $departure_time,
-            "gtfs:stop" => $stop_id,
-            "gtfs:stopSequence" => $stop_sequence
+            'gtfs:trip'          => $trip_id,
+            'gtfs:arrivalTime'   => $arrival_time,
+            'gtfs:departureTime' => $departure_time,
+            'gtfs:stop'          => $stop_id,
+            'gtfs:stopSequence'  => $stop_sequence,
         ];
 
         return $stoptimes_entry;
@@ -372,18 +378,19 @@ class RouteFetcher
      * @param $date
      * @param $shortName
      * @param $language
+     *
      * @return mixed
      */
-    static function getServerData($date, $shortName, $language)
+    public static function getServerData($date, $shortName, $language)
     {
         $request_options = [
-            "timeout" => "30",
-            "useragent" => "GTFS by Project iRail",
+            'timeout'   => '30',
+            'useragent' => 'GTFS by Project iRail',
         ];
 
-        $scrapeURL = "http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/" . $language . "ld=std&seqnr=1&ident=at.02043113.1429435556&";
+        $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/'.$language.'ld=std&seqnr=1&ident=at.02043113.1429435556&';
 
-        $post_data = "trainname=" . $shortName . "&start=Zoeken&selectDate=oneday&date=" . $date . "&realtimeMode=Show";
+        $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $scrapeURL);
@@ -391,8 +398,8 @@ class RouteFetcher
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
-        curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
         $result = curl_exec($ch);
 
         curl_close($ch);
@@ -402,21 +409,22 @@ class RouteFetcher
 
     /**
      * @param $scrapeURL
+     *
      * @return mixed
      */
-    static function getServerDataByUrl($scrapeURL)
+    public static function getServerDataByUrl($scrapeURL)
     {
         $request_options = [
-            "timeout" => "30",
-            "useragent" => "GTFS by Project iRail",
+            'timeout'   => '30',
+            'useragent' => 'GTFS by Project iRail',
         ];
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $scrapeURL);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options["timeout"]);
-        curl_setopt($ch, CURLOPT_USERAGENT, $request_options["useragent"]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
         $result = curl_exec($ch);
 
         curl_close($ch);
@@ -424,14 +432,14 @@ class RouteFetcher
         return $result;
     }
 
-    static function getStations()
+    public static function getStations()
     {
         $client = new Client();
-        $url = "https://irail.be/stations/NMBS";
+        $url = 'https://irail.be/stations/NMBS';
         $response = $client->get($url, [
             'headers' => [
                 'Accept' => 'application/json',
-            ]
+            ],
         ]);
 
         $json = $response->getBody();
@@ -440,7 +448,7 @@ class RouteFetcher
     }
 
     // Stations as parameter, so we have to load it once
-    static function getMatches($stations, $query)
+    public static function getMatches($stations, $query)
     {
         // Hardcoded some stations that NMBS gives different names to
         if ($query == 'Frankfurt Main (d)') {
@@ -473,42 +481,42 @@ class RouteFetcher
         }
 
         // var_dump($stations);
-        $newstations = new \stdClass;
-        $newstations->{"@id"} = $stations["@id"];
-        $newstations->{"@context"} = $stations["@context"];
-        $newstations->{"@graph"} = [];
+        $newstations = new \stdClass();
+        $newstations->{'@id'} = $stations['@id'];
+        $newstations->{'@context'} = $stations['@context'];
+        $newstations->{'@graph'} = [];
 
         //make sure something between brackets is ignored
-        $query = preg_replace("/\s?\(.*?\)/i", "", $query);
+        $query = preg_replace("/\s?\(.*?\)/i", '', $query);
 
         // st. is the same as Saint
-        $query = preg_replace("/st(\s|$)/i", "(saint|st|sint) ", $query);
+        $query = preg_replace("/st(\s|$)/i", '(saint|st|sint) ', $query);
         //make sure that we're only taking the first part before a /
-        $query = explode("/", $query);
+        $query = explode('/', $query);
         $query = trim($query[0]);
 
         // Dashes are the same as spaces
         $query = self::normalizeAccents($query);
         $query = str_replace("\-", "[\- ]", $query);
-        $query = str_replace(" ", "[\- ]", $query);
+        $query = str_replace(' ', "[\- ]", $query);
 
         $count = 0;
-        foreach ($stations["@graph"] as $station) {
-            if (preg_match('/.*' . $query . '.*/i', self::normalizeAccents($station["name"]), $match)) {
-                $newstations->{"@graph"}[] = $station;
+        foreach ($stations['@graph'] as $station) {
+            if (preg_match('/.*'.$query.'.*/i', self::normalizeAccents($station['name']), $match)) {
+                $newstations->{'@graph'}[] = $station;
                 $count++;
             } elseif (isset($station->alternative)) {
                 if (is_array($station->alternative)) {
                     foreach ($station->alternative as $alternative) {
-                        if (preg_match('/.*(' . $query . ').*/i', self::normalizeAccents($alternative->{"@value"}), $match)) {
-                            $newstations->{"@graph"}[] = $station;
+                        if (preg_match('/.*('.$query.').*/i', self::normalizeAccents($alternative->{'@value'}), $match)) {
+                            $newstations->{'@graph'}[] = $station;
                             $count++;
                             break;
                         }
                     }
                 } else {
-                    if (preg_match('/.*' . $query . '.*/i', self::normalizeAccents($station->alternative->{"@value"}))) {
-                        $newstations->{"@graph"}[] = $station;
+                    if (preg_match('/.*'.$query.'.*/i', self::normalizeAccents($station->alternative->{'@value'}))) {
+                        $newstations->{'@graph'}[] = $station;
                         $count++;
                     }
                 }
@@ -517,17 +525,19 @@ class RouteFetcher
                 return $newstations;
             }
         }
+
         return $newstations;
     }
 
     /**
      * @param $str
+     *
      * @return string
-     * Languages supported are: German, French and Dutch
-     * We have to take into account that some words may have accents
-     * Taken from https://stackoverflow.com/questions/3371697/replacing-accented-characters-php
+     *                Languages supported are: German, French and Dutch
+     *                We have to take into account that some words may have accents
+     *                Taken from https://stackoverflow.com/questions/3371697/replacing-accented-characters-php
      */
-    static function normalizeAccents($str)
+    public static function normalizeAccents($str)
     {
         $unwanted_array = [
             'Š' => 'S', 'š' => 's', 'Ž' => 'Z', 'ž' => 'z',
@@ -546,7 +556,7 @@ class RouteFetcher
             'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o',
             'ö' => 'o', 'ø' => 'o', 'ù' => 'u', 'ú' => 'u',
             'û' => 'u', 'ý' => 'y', 'þ' => 'b',
-            'ÿ' => 'y'
+            'ÿ' => 'y',
         ];
 
         return strtr($str, $unwanted_array);
@@ -556,29 +566,30 @@ class RouteFetcher
      * @param $matches
      * @param $stop_name
      * @param $language
+     *
      * @return string
      */
-    static function getBestMatchId($matches, $stop_name, $language)
+    public static function getBestMatchId($matches, $stop_name, $language)
     {
         $max_percent = 0; // Percentage of similarity of the best match
-        $stop_id = "";
+        $stop_id = '';
 
-        foreach ($matches->{"@graph"} as $match) {
+        foreach ($matches->{'@graph'} as $match) {
             // First check if the stationname is available in the same language
-            if (isset($match["alternative"])) {
-                $stationName = self::getAlternativeName($match["alternative"], $language);
+            if (isset($match['alternative'])) {
+                $stationName = self::getAlternativeName($match['alternative'], $language);
             } else {
                 $stationName = null;
             }
 
             if ($stationName == null) {
                 // Use the standardName
-                $stationName = $match["name"];
+                $stationName = $match['name'];
             }
 
             similar_text($stationName, $stop_name, $percent);
             if ($percent > $max_percent) {
-                $stop_id = $match["@id"];
+                $stop_id = $match['@id'];
                 $max_percent = $percent;
             }
         }
@@ -589,21 +600,22 @@ class RouteFetcher
     /**
      * @param $stationsByLang
      * @param $language
+     *
      * @return null
      */
-    static function getAlternativeName($stationsByLang, $language)
+    public static function getAlternativeName($stationsByLang, $language)
     {
         // Dutch
-        if ($language == "nn") {
-            $language = "nl";
+        if ($language == 'nn') {
+            $language = 'nl';
         }
 
         foreach ($stationsByLang as $s) {
-            if (isset($s["@language"])) {
-                return $s["@value"];
+            if (isset($s['@language'])) {
+                return $s['@value'];
             }
         }
 
-        return null;
+        return;
     }
 }
