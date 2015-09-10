@@ -5,7 +5,7 @@
 // set the default timezone to use. Available since PHP 5.1
 date_default_timezone_set('UTC');
 
-$configs = include 'config.php';
+$configs = include '../config.php';
 
 $feed_lang = $configs['language'];
 $feed_start_date = date_create_from_format('d-m-Y', $configs['start_date'])->format('Ymd');
