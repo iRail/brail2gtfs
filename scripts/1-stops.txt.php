@@ -35,7 +35,11 @@ function getStops()
     return json_decode($json);
 }
 
-// Scrapes list of routes of the Belgian Rail website
+/**
+ * Scrapes list of routes of the Belgian Rail website.
+ * 
+ * @param $stationId
+ */
 function getServerData($stationId)
 {
     $request_options = [
