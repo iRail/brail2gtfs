@@ -66,6 +66,11 @@ function init()
     }
 }
 
+/**
+ * @param $dateServiceIdPairs
+ * @param $service_id
+ * @return bool
+ */
 function checkForServiceId($dateServiceIdPairs, $service_id)
 {
     $contains = false;
@@ -82,7 +87,14 @@ function checkForServiceId($dateServiceIdPairs, $service_id)
     return $contains;
 }
 
-// this function uses the routefetcher to check if there's a trip driving on a certain day by a route
+/**
+ * This function uses the routefetcher to check if there's a trip driving on a certain day by a route.
+ *
+ * @param $route_short_name
+ * @param $service_id
+ * @param $date
+ * @return mixed
+ */
 function getServiceIdDatePair($route_short_name, $service_id, $date)
 {
     global $checkRouteAdd;
@@ -113,8 +125,12 @@ function getServiceIdDatePair($route_short_name, $service_id, $date)
     return $serviceId_date_pair;
 }
 
-// Some services don't drive so those have to be deleted from calendar_dates.txt
-// To do this, we generate a temporary file where we put all the services that drive
+/**
+ * Some services don't drive so these have to be deleted from calendar_dates.txt
+ * To do this, we generate a temporary file where we put all the services. that drive.
+ *
+ * @param $serviceId_date_pairs
+ */
 function makeCorrectCalendarDates($serviceId_date_pairs)
 {
     global $file_temp, $file_calendar_dates;
@@ -192,6 +208,10 @@ function getAllStops()
     return $allStops;
 }
 
+/**
+ * @param $allStops
+ * @return array
+ */
 function findMissingStops($allStops)
 {
     global $file_stops;
@@ -233,6 +253,9 @@ function findMissingStops($allStops)
     return $missingStops;
 }
 
+/**
+ * @param $missingStops
+ */
 function addMissingStops($missingStops)
 {
     global $file_stops;

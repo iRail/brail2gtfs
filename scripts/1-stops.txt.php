@@ -39,6 +39,7 @@ function getStops()
  * Scrapes list of routes of the Belgian Rail website.
  * 
  * @param $stationId
+ * @return mixed
  */
 function getServerData($stationId)
 {
@@ -70,6 +71,10 @@ function getServerData($stationId)
     return $result;
 }
 
+/**
+ * @param $stationId
+ * @return array
+ */
 function getNumberAndLetterPairOfPlatforms($stationId)
 {
     $result = getServerData($stationId);
@@ -118,6 +123,15 @@ function getNumberAndLetterPairOfPlatforms($stationId)
     return [$maxNr, $maxLetter];
 }
 
+/**
+ * @param $stop_id
+ * @param $stop_name
+ * @param $stop_lat
+ * @param $stop_lon
+ * @param $platform_code
+ * @param $parent_station
+ * @param $location_type
+ */
 function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $platform_code, $parent_station, $location_type)
 {
     global $dist;
@@ -134,6 +148,10 @@ function addStop($stop_id, $stop_name, $stop_lat, $stop_lon, $platform_code, $pa
     appendCSV($dist, $csv);
 }
 
+/**
+ * @param $dist
+ * @param $csv
+ */
 function appendCSV($dist, $csv)
 {
     file_put_contents($dist, trim($csv).PHP_EOL, FILE_APPEND);

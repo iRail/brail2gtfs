@@ -24,13 +24,20 @@ $service_id = 0; // Counter
 
 date_default_timezone_set('UTC');
 
-// Scrapes list of routes of the Belgian Rail website
+/**
+ * Scrapes list of routes of the Belgain Rail website.
+ *
+ * @param $date
+ * @param $shortName
+ * @return mixed
+ */
 function getServerData($date, $shortName)
 {
     $request_options = [
             'timeout'   => '30',
             'useragent' => 'iRail.be by Project iRail',
             ];
+
     $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/nn?ld=std&AjaxMap=CPTVMap&seqnr=1&';
 
     $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
@@ -50,7 +57,13 @@ function getServerData($date, $shortName)
     return $result;
 }
 
-// Parses short_names of routes out of the HTML (e.g., "P8008")
+/**
+ * Parses short_name of routes out of the HTML (e.g., "P8008")
+ *
+ * @param $serverData
+ * @param $date
+ * @param $shortName
+ */
 function getData($serverData, $date, $shortName)
 {
     include_once 'includes/simple_html_dom.php';
@@ -156,7 +169,12 @@ function getData($serverData, $date, $shortName)
     }
 }
 
-// Scrapes one route
+/**
+ * Scrapes one route.
+ *
+ * @param $url
+ * @return bool
+ */
 function drives($url)
 {
     $request_options = [
@@ -180,6 +198,10 @@ function drives($url)
     return is_object($test);
 }
 
+/**
+ * @param $url
+ * @return mixed|void
+*/
 function parseSplittedRoute($url)
 {
     $request_options = [
@@ -203,6 +225,10 @@ function parseSplittedRoute($url)
     return $splitRouteId;
 }
 
+/**
+ * @param $html
+ * @return mixed|void
+ */
 function getSplitTrainRouteId($html)
 {
     $nodes = $html->getElementById('tq_trainroute_content_table_alteAnsicht')->getElementByTagName('table')->children;
@@ -228,6 +254,11 @@ function getSplitTrainRouteId($html)
     return; // No name for the splitted train
 }
 
+/**
+ * @param $route_short_name
+ * @param $date
+ * @param $VTString
+ */
 function checkServiceId($route_short_name, $date, $VTString)
 {
     global $routes_info; // our hashmap
@@ -263,6 +294,11 @@ function checkServiceId($route_short_name, $date, $VTString)
     addRouteInfo($toAddServiceId, $date, $route_short_name);
 }
 
+/**
+ * @param $service_vtstring_array
+ * @param $VTString
+ * @return bool
+ */
 function isVTStringAlreadyAdded($service_vtstring_array, $VTString)
 {
     $alreadyAdded = false;
@@ -277,6 +313,10 @@ function isVTStringAlreadyAdded($service_vtstring_array, $VTString)
     return $alreadyAdded;
 }
 
+/**
+ * @param $route_short_name
+ * @param $VTString
+ */
 function getServiceId($route_short_name, $VTString)
 {
     global $routes_info; // our hashmap
@@ -306,6 +346,11 @@ function addCalendarDate($service_id, $date, $exception_type)
     appendCSV($file_calendar_dates, $csv);
 }
 
+/**
+ * @param $service_id
+ * @param $date
+ * @param $route_short_name
+ */
 function addRouteInfo($service_id, $date, $route_short_name)
 {
     global $file_routes_info_tmp;
@@ -318,6 +363,10 @@ function addRouteInfo($service_id, $date, $route_short_name)
     appendCSV($file_routes_info_tmp, $csv);
 }
 
+/**
+ * @param $dist
+ * @param $csv
+ */
 function appendCSV($dist, $csv)
 {
     file_put_contents($dist, trim($csv).PHP_EOL, FILE_APPEND);
