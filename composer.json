@@ -4,8 +4,15 @@
     "require": {
         "guzzlehttp/guzzle": "~5.0",
         "monolog/monolog": "1.0.*",
-        "jms/parser-lib": "~1.0"
+        "jms/parser-lib": "~1.0",
+        "iRail/stations": "dev-master"
     },
+    "repositories": [
+        {
+            "url": "git@github.com:iRail/stations.git",
+            "type": "git"
+        }
+    ],
     "autoload": {
         "psr-0": {
             "iRail\\": "src/"
