@@ -138,6 +138,7 @@ class RouteFetcher
                 } else {
                     $arrivalTime = array_shift($node->children[1]->children[0]->nodes[0]->_);
                     $departureTime = array_shift($node->children[1]->children[2]->nodes[0]->_);
+
                     // Stop_name
                     $stop_name = trim(array_shift($node->children[3]->nodes[0]->_));
                     if ($stop_name == '') {
@@ -164,6 +165,12 @@ class RouteFetcher
                         $stop_id = 'stops:008774172'; // Don't know where I found this
                     } elseif ($stop_name == 'Dommeldange (l)') {
                         $stop_id = 'stops:008000001'; // To be found: https://github.com/iRail/stations/issues/82
+                    } elseif ($stop_name == 'Limburg sud (l)') {
+                        $stop_id = 'stops:008032572';
+                    } elseif ($stop_name == 'Aeroport Cdg Tgv (f)') {
+                        $stop_id = 'stops:008727149';
+                    } elseif ($stop_name == 'Tgv Haute Picardie (f)') {
+                        $stop_id = 'stops:008731388';
                     } else {
                         $stop_id = 'stops:'.str_replace('http://irail.be/stations/NMBS/','',Stations::getStations($stop_name)->{"@graph"}[0]->{"@id"});
                     }
@@ -388,192 +395,5 @@ class RouteFetcher
         curl_close($ch);
 
         return $result;
-    }
-
-    public static function getStations()
-    {
-        $client = new Client();
-        $url = 'https://irail.be/stations/NMBS';
-        $response = $client->get($url, [
-            'headers' => [
-                'Accept' => 'application/json',
-            ],
-        ]);
-
-        $json = $response->getBody();
-
-        return json_decode($json, true);
-    }
-
-    // Stations as parameter, so we have to load it once
-    public static function getMatches($stations, $query)
-    {
-        // Hardcoded some stations that NMBS gives different names to
-        if ($query == 'Frankfurt Main (d)') {
-            $query = 'Frankfurt am Main Flughafen';
-        } elseif ($query == 'Frankfurt Flugh (d)') {
-            $query = 'Frankfurt am Main Hbf';
-        } elseif ($query == 'Ettelbruck (l)') {
-            $query = 'Ettelbréck';
-        } elseif ($query == 'Kautenbach (l)') {
-            $query = 'Kautebaach';
-        } elseif ($query == 'Koln Hbf (d)') {
-            $query = 'Köln Hbf';
-        } elseif ($query == 'Capellen (l)') {
-            $query = 'Kapellen';
-        } elseif ($query == 'Kleinbettingen (l)') {
-            $query = 'Klengbetten';
-        } elseif ($query == 'Aeroport Cdg Tgv (f)') {
-            $query = 'Aéroport Charles-de-Gaulle TGV';
-        } elseif ($query == 'Tgv Haute Picardie (f)') {
-            $query = 'Haute-Picardie TGV';
-        } elseif ($query == 'Duesseldorf Hbf (d)') {
-            $query = 'Düsseldorf Hbf';
-        } elseif ($query == 'Croix L Allumette (f)') {
-            $query = "Croix l'Allumette";
-        }
-
-        // Delete ('country-abbreviation') if present
-        if (strpos($query, '(') < strlen($query)) {
-            $query = substr($query, 0, strpos($query, '(') - 2);
-        }
-
-        // var_dump($stations);
-        $newstations = new \stdClass();
-        $newstations->{'@id'} = $stations['@id'];
-        $newstations->{'@context'} = $stations['@context'];
-        $newstations->{'@graph'} = [];
-
-        //make sure something between brackets is ignored
-        $query = preg_replace("/\s?\(.*?\)/i", '', $query);
-
-        // st. is the same as Saint
-        $query = preg_replace("/st(\s|$)/i", '(saint|st|sint) ', $query);
-        //make sure that we're only taking the first part before a /
-        $query = explode('/', $query);
-        $query = trim($query[0]);
-
-        // Dashes are the same as spaces
-        $query = self::normalizeAccents($query);
-        $query = str_replace("\-", "[\- ]", $query);
-        $query = str_replace(' ', "[\- ]", $query);
-
-        $count = 0;
-        foreach ($stations['@graph'] as $station) {
-            if (preg_match('/.*'.$query.'.*/i', self::normalizeAccents($station['name']), $match)) {
-                $newstations->{'@graph'}[] = $station;
-                $count++;
-            } elseif (isset($station->alternative)) {
-                if (is_array($station->alternative)) {
-                    foreach ($station->alternative as $alternative) {
-                        if (preg_match('/.*('.$query.').*/i', self::normalizeAccents($alternative->{'@value'}), $match)) {
-                            $newstations->{'@graph'}[] = $station;
-                            $count++;
-                            break;
-                        }
-                    }
-                } else {
-                    if (preg_match('/.*'.$query.'.*/i', self::normalizeAccents($station->alternative->{'@value'}))) {
-                        $newstations->{'@graph'}[] = $station;
-                        $count++;
-                    }
-                }
-            }
-            if ($count > 5) {
-                return $newstations;
-            }
-        }
-
-        return $newstations;
-    }
-
-    /**
-     * @param $str
-     *
-     * @return string
-     *                Languages supported are: German, French and Dutch
-     *                We have to take into account that some words may have accents
-     *                Taken from https://stackoverflow.com/questions/3371697/replacing-accented-characters-php
-     */
-    public static function normalizeAccents($str)
-    {
-        $unwanted_array = [
-            'Š' => 'S', 'š' => 's', 'Ž' => 'Z', 'ž' => 'z',
-            'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A',
-            'Ä' => 'A', 'Å' => 'A', 'Æ' => 'A', 'Ç' => 'C',
-            'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E',
-            'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I',
-            'Ñ' => 'N', 'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O',
-            'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O', 'Ù' => 'U',
-            'Ú' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ý' => 'Y',
-            'Þ' => 'B', 'ß' => 'Ss', 'à' => 'a', 'á' => 'a',
-            'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a',
-            'æ' => 'a', 'ç' => 'c', 'è' => 'e', 'é' => 'e',
-            'ê' => 'e', 'ë' => 'e', 'ì' => 'i', 'í' => 'i',
-            'î' => 'i', 'ï' => 'i', 'ð' => 'o', 'ñ' => 'n',
-            'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o',
-            'ö' => 'o', 'ø' => 'o', 'ù' => 'u', 'ú' => 'u',
-            'û' => 'u', 'ý' => 'y', 'þ' => 'b',
-            'ÿ' => 'y',
-        ];
-
-        return strtr($str, $unwanted_array);
-    }
-
-    /**
-     * @param $matches
-     * @param $stop_name
-     * @param $language
-     *
-     * @return string
-     */
-    public static function getBestMatchId($matches, $stop_name, $language)
-    {
-        $max_percent = 0; // Percentage of similarity of the best match
-        $stop_id = '';
-
-        foreach ($matches->{'@graph'} as $match) {
-            // First check if the stationname is available in the same language
-            if (isset($match['alternative'])) {
-                $stationName = self::getAlternativeName($match['alternative'], $language);
-            } else {
-                $stationName = null;
-            }
-
-            if ($stationName == null) {
-                // Use the standardName
-                $stationName = $match['name'];
-            }
-
-            similar_text($stationName, $stop_name, $percent);
-            if ($percent > $max_percent) {
-                $stop_id = $match['@id'];
-                $max_percent = $percent;
-            }
-        }
-
-        return $stop_id;
-    }
-
-    /**
-     * @param $stationsByLang
-     * @param $language
-     *
-     * @return null
-     */
-    public static function getAlternativeName($stationsByLang, $language)
-    {
-        // Dutch
-        if ($language == 'nn') {
-            $language = 'nl';
-        }
-
-        foreach ($stationsByLang as $s) {
-            if (isset($s['@language'])) {
-                return $s['@value'];
-            }
-        }
-
-        return;
     }
 }
