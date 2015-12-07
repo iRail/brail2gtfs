@@ -17,6 +17,7 @@ include_once 'includes/simple_html_dom.php';
 use GuzzleHttp\Client;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use irail\stations\Stations;
 
 class RouteFetcher
 {
@@ -159,57 +160,12 @@ class RouteFetcher
                     $stop_id = 'stops:'.'00'.$nr;
                 } else {
                     // With foreign stations, there's a sometimes no URL available
-                    // Find the stop_id with the stations.json
-                    if ($stations == null) {
-                        $stations = self::getStations();
-                    }
-                    ////////////// TEMPORARY TILL NEW STATIONS.CSV ONLINE
-                    if ($stop_name == 'Siegburg (d)') {
-                        $stop_id = 'stops:008015588';
-                    } elseif ($stop_name == 'Limburg Sud (d)') {
-                        $stop_id = 'stops:008032572';
-                    } elseif ($stop_name == 'Duisburg Hbf') {
-                        $stop_id = 'stops:008010316';
-                    } elseif ($stop_name == 'Tgv Haute Picardie (f)') {
-                        $stop_id = 'stops:008731388';
-                    } elseif ($stop_name == 'Agde (f)') {
-                        $stop_id = 'stops:008778127';
-                    } elseif ($stop_name == 'Beziers (f)') {
-                        $stop_id = 'stops:008778100';
-                    } elseif ($stop_name == 'Narbonne (f)') {
-                        $stop_id = 'stops:008778110';
-                    } elseif ($stop_name == 'Perpignan (f)') {
-                        $stop_id = 'stops:008778400';
-                    } elseif ($stop_name == 'Duesseldorf Flughafen (d)') {
-                        $stop_id = 'stops:008039904';
-                    } elseif ($stop_name == 'Lyon Perrache') {
-                        $stop_id = 'stops:008772202';
-                    } elseif ($stop_name == 'Sete (f)') {
-                        $stop_id = 'stops:008777320';
-                    } elseif ($stop_name == 'Lyon Part Dieu (f)') {
-                        $stop_id = 'stops:008772319';
-                    } elseif ($stop_name == 'Chambery Challes L (f)') {
-                        $stop_id = 'stops:008774100';
-                    } elseif ($stop_name == 'Albertville (f)') {
-                        $stop_id = 'stops:008774164';
-                    } elseif ($stop_name == 'Moutiers Sb Les B (f)') {
-                        $stop_id = 'stops:008774172';
-                    } elseif ($stop_name == 'Aime La Plagne (f)') {
-                        $stop_id = 'stops:008774176';
-                    } elseif ($stop_name == 'Landry (f)') {
-                        $stop_id = 'stops:008774177';
-                    } elseif ($stop_name == 'Bourg Saint Maurice (f)') {
-                        $stop_id = 'stops:008774179';
-                    } elseif ($stop_name == 'Lyon-Saint Exupery') {
-                        $stop_id = 'stops:008776290';
+                    if ($stop_name == 'Moutiers Sb Les B (f)') {
+                        $stop_id = 'stops:008774172'; // Don't know where I found this
+                    } elseif ($stop_name == 'Dommeldange (l)') {
+                        $stop_id = 'stops:008000001'; // To be found: https://github.com/iRail/stations/issues/82
                     } else {
-                        ///////////////////////////////////////////////////////
-                        $matches = self::getMatches($stations, $stop_name);
-                        $stop_id = self::getBestMatchId($matches, $stop_name, $language);
-
-                        if (preg_match("/NMBS\/(\d+)/i", $stop_id, $matches)) {
-                            $stop_id = 'stops:'.$matches[1];
-                        }
+                        $stop_id = 'stops:'.str_replace('http://irail.be/stations/NMBS/','',Stations::getStations($stop_name)->{"@graph"}[0]->{"@id"});
                     }
                 }
 

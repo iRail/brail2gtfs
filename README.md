@@ -16,6 +16,10 @@ We use the PHP package manager [composer](http://getcomposer.org). Make sure it'
 
 ```bash
 composer install
+
+cd vendor/irail/stations
+npm install
+./bin/build.js > stations.jsonld
 ```
 
 ## Custom configuration
@@ -39,4 +43,3 @@ rm *.txt
 ```
 
 Your NMBS/SNCB GTFS file is now ready for publishing!
-
