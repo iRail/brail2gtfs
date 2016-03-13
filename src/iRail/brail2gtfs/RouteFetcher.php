@@ -102,7 +102,6 @@ class RouteFetcher
       $departureStation = null;
       $arrivalStation = null;
 
-      $j = 0;
       for ($i=1; $i < count($nodes); $i++) {
         $node = $nodes[$i];
         if (!count($node->attr)) continue; // row with no class-attribute contain no data
@@ -142,12 +141,24 @@ class RouteFetcher
             $stop_id = 'stops:008774172'; // Don't know where I found this
           } elseif ($stop_name == 'Dommeldange (l)') {
             $stop_id = 'stops:008000001'; // To be found: https://github.com/iRail/stations/issues/82
-          } elseif ($stop_name == 'Limburg sud (l)') {
+          } elseif ($stop_name == 'Limburg sud (d)') {
             $stop_id = 'stops:008032572';
           } elseif ($stop_name == 'Aeroport Cdg Tgv (f)') {
             $stop_id = 'stops:008727149';
           } elseif ($stop_name == 'Tgv Haute Picardie (f)') {
             $stop_id = 'stops:008731388';
+          } elseif ($stop_name == 'Dortmund Hbf (d)') {
+            $stop_id = 'stops:008010053';
+          } elseif ($stop_name == 'Essen Hbf `') {
+            $stop_id = 'stops:008821402';
+          } elseif ($stop_name == 'Duesseldorf Flughafen (d)') {
+            $stop_id = 'stops:008039904';
+          } elseif ($stop_name == 'Duesseldorf Hbf (d) ') {
+            $stop_id = 'stops:008008094';
+          } elseif ($stop_name == 'Koln Hbf (d)') {
+            $stop_id = 'stops:008015458';
+          } elseif ($stop_name == '') {
+
           } else {
             $stop_id = 'stops:'.str_replace('http://irail.be/stations/NMBS/','',Stations::getStations($stop_name)->{"@graph"}[0]->{"@id"});
           }
@@ -200,7 +211,6 @@ class RouteFetcher
 
         $previousDateTime = $departureDateTime;
         $stop_sequence++;
-        $i++;
       }
 
       // Set arrival station for routes.txt

@@ -37,7 +37,7 @@ function getStops()
 
 /**
  * Scrapes list of routes of the Belgian Rail website.
- * 
+ *
  * @param $stationId
  * @return mixed
  */
@@ -170,7 +170,7 @@ for ($i = 0; $i < count($stops); $i++) {
     $parent_id = $stop->{'@id'};
     if (preg_match("/NMBS\/(\d+)/i", $parent_id, $matches)) {
         $stationId = $matches[1];
-        $parent_stop_id = 'stops:'.$matches[1];
+        $parent_stop_id = substr($matches[1], 2);
     }
     $parent_name = $stop->{'name'};
     $parent_lat = $stop->{'latitude'};
