@@ -33,26 +33,32 @@ date_default_timezone_set('UTC');
  */
 function getServerData($date, $shortName)
 {
-    $request_options = [
-            'timeout'   => '30',
-            'useragent' => 'iRail.be by Project iRail',
-            ];
+    include_once 'includes/simple_html_dom.php';
 
-    $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/nn?ld=std&AjaxMap=CPTVMap&seqnr=1&';
+    $html = true;
+    while (is_bool($html)) {
+      $request_options = [
+              'timeout'   => '30',
+              'useragent' => 'iRail.be by Project iRail',
+              ];
 
-    $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
+      $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/nn?ld=std&AjaxMap=CPTVMap&seqnr=1&';
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
+      $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
 
-    curl_close($ch);
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $scrapeURL);
+      curl_setopt($ch, CURLOPT_POST, 1);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+      curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+      $result = curl_exec($ch);
+      curl_close($ch);
+
+      $html = str_get_html($result);
+    }
 
     return $result;
 }
@@ -177,21 +183,24 @@ function getData($serverData, $date, $shortName)
  */
 function drives($url)
 {
-    $request_options = [
-            'timeout'   => '30',
-            'useragent' => 'iRail.be by Project iRail',
-            ];
+    $html = true;
+    while (is_bool($html)) {
+      $request_options = [
+              'timeout'   => '30',
+              'useragent' => 'iRail.be by Project iRail',
+              ];
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
-    curl_close($ch);
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $url);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+      curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+      $result = curl_exec($ch);
+      curl_close($ch);
 
-    $html = str_get_html($result);
+      $html = str_get_html($result);
+    }
 
     $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
 
@@ -204,21 +213,25 @@ function drives($url)
 */
 function parseSplittedRoute($url)
 {
-    $request_options = [
-            'timeout'   => '30',
-            'useragent' => 'iRail.be by Project iRail',
-            ];
+    $html = true;
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
-    curl_close($ch);
+    while (is_bool($html)) {
+      $request_options = [
+              'timeout'   => '30',
+              'useragent' => 'iRail.be by Project iRail',
+              ];
 
-    $html = str_get_html($result);
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $url);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+      curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+      $result = curl_exec($ch);
+      curl_close($ch);
+
+      $html = str_get_html($result);
+    }
 
     $splitRouteId = getSplitTrainRouteId($html);
 
@@ -397,4 +410,6 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
 }
 
 // Delete duplicates
-deleteDuplicates();
+echo "Calendar_dates.txt and routes_info.tmp.txt are ready!"
+echo "Run `php includes/delete-duplicates.php` to remove duplicates from calendar_dates.txt"
+echo "Then run `mv dist/other.txt dist/calendar_dates.txt` to replace the original version."

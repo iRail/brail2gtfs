@@ -134,33 +134,33 @@ class RouteFetcher
             $nr = substr($link, strpos($link, 'stationId=') + strlen('stationId='));
           }
           $nr = substr($nr, 0, strlen($nr) - 1); // delete ampersand on the end
-          $stop_id = 'stops:'.'00'.$nr;
+          $stop_id = $nr;
         } else {
           // With foreign stations, there's a sometimes no URL available
           if ($stop_name == 'Moutiers Sb Les B (f)') {
-            $stop_id = 'stops:008774172'; // Don't know where I found this
+            $stop_id = '8774172'; // Don't know where I found this
           } elseif ($stop_name == 'Dommeldange (l)') {
-            $stop_id = 'stops:008000001'; // To be found: https://github.com/iRail/stations/issues/82
+            $stop_id = '8000001'; // To be found: https://github.com/iRail/stations/issues/82
           } elseif ($stop_name == 'Limburg sud (d)') {
-            $stop_id = 'stops:008032572';
+            $stop_id = '8032572';
           } elseif ($stop_name == 'Aeroport Cdg Tgv (f)') {
-            $stop_id = 'stops:008727149';
+            $stop_id = '8727149';
           } elseif ($stop_name == 'Tgv Haute Picardie (f)') {
-            $stop_id = 'stops:008731388';
+            $stop_id = '8731388';
           } elseif ($stop_name == 'Dortmund Hbf (d)') {
-            $stop_id = 'stops:008010053';
+            $stop_id = '8010053';
           } elseif ($stop_name == 'Essen Hbf `') {
-            $stop_id = 'stops:008821402';
+            $stop_id = '8821402';
           } elseif ($stop_name == 'Duesseldorf Flughafen (d)') {
-            $stop_id = 'stops:008039904';
+            $stop_id = '8039904';
           } elseif ($stop_name == 'Duesseldorf Hbf (d) ') {
-            $stop_id = 'stops:008008094';
+            $stop_id = '8008094';
           } elseif ($stop_name == 'Koln Hbf (d)') {
-            $stop_id = 'stops:008015458';
+            $stop_id = '8015458';
           } elseif ($stop_name == '') {
 
           } else {
-            $stop_id = 'stops:'.str_replace('http://irail.be/stations/NMBS/','',Stations::getStations($stop_name)->{"@graph"}[0]->{"@id"});
+            $stop_id = substr(str_replace('http://irail.be/stations/NMBS/','',Stations::getStations($stop_name)->{"@graph"}[0]->{"@id"}), 2);
           }
         }
 
@@ -238,16 +238,20 @@ class RouteFetcher
       'useragent' => 'iRail.be by Project iRail',
     ];
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
-    curl_close($ch);
+    $html = true;
+    while (is_bool($html)) {
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $url);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+      curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+      $result = curl_exec($ch);
+      curl_close($ch);
 
-    $html = str_get_html($result);
+      $html = str_get_html($result);
+    }
+
     $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
 
     return is_object($test);
@@ -349,17 +353,20 @@ class RouteFetcher
 
     $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
-
-    curl_close($ch);
+    $html = true;
+    while (is_bool($html)) {
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $scrapeURL);
+      curl_setopt($ch, CURLOPT_POST, 1);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+      curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+      $result = curl_exec($ch);
+      curl_close($ch);
+      $html = str_get_html($result);
+    }
 
     return $result;
   }
@@ -376,15 +383,19 @@ class RouteFetcher
       'useragent' => 'GTFS by Project iRail',
     ];
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
+    $html = true;
+    while (is_bool($html)) {
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $scrapeURL);
+      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+      curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+      $result = curl_exec($ch);
+      curl_close($ch);
 
-    curl_close($ch);
+      $html = str_get_html($result);
+    }
 
     return $result;
   }

@@ -6,7 +6,7 @@ Scrapes the Belgian railways and generates GTFS files for the current year.
 If you're unsure what GTFS is, check the explanation at http://gtfs.org.
 
 Following traintypes are included:
-IC, ICE, L, P, TGV, THALYS, TRN and EXT
+IC, ICE, L, P, S, TGV, THALYS, TRN and EXT
 
 You can download a copy at: http://gtfs.irail.be/
 
@@ -32,6 +32,12 @@ There are a couple of scripts in the scripts folder. Run them in order. The scra
 
 ```bash
 php scripts/*.php
+```
+
+After generating `calendar_dates.txt`, run following commands to remove duplicates from calendar_dates.txt:
+```bash
+php includes/delete-duplicates.php
+mv dist/other.txt dist/calendar_dates.txt
 ```
 
 Afterwards, go to the dist folder, and create a zip archive:
