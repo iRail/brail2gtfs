@@ -44,13 +44,12 @@ function getServerData($date, $shortName)
 
       $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/nn?ld=std&AjaxMap=CPTVMap&seqnr=1&';
 
-      $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
+      $scrapeURL .= 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
 
+      echo "HTTP GET - " . $scrapeURL . "\n";
+      
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-      curl_setopt($ch, CURLOPT_POST, 1);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
       curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
@@ -189,10 +188,9 @@ function drives($url)
               'timeout'   => '30',
               'useragent' => 'iRail.be by Project iRail',
               ];
-
+      echo "HTTP GET - " . $url . "\n";
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $url);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
       curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
@@ -221,9 +219,10 @@ function parseSplittedRoute($url)
               'useragent' => 'iRail.be by Project iRail',
               ];
 
+      echo "HTTP GET - " . $url . "\n";
+      
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, $url);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
       curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
@@ -411,6 +410,9 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
 
 // Delete duplicates
 echo "Calendar_dates.txt and routes_info.tmp.txt are ready!";
-echo "Run `php includes/delete-duplicates.php` to remove duplicates from calendar_dates.txt";
-echo "Then run `mv dist/other.txt dist/calendar_dates.txt` to replace the original version.";
+echo "Removing duplicates from calendar_dates.txt...";
+echo exec('head -1 dist/calendar_dates.txt > dist/calendar_dates_unique.txt | tail -n+2 | sort -u >> dist/calendar_dates_unique.txt');
+echo exec('mv dist/calendar_dates_unique.txt dist/calendar_dates.txt');
+echo "Done.";
+
 
