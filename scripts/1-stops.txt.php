@@ -56,7 +56,7 @@ function getServerData($stationId)
     $scrapeURL .= 'maxJourneys='.$numberOfResults.'&boardType=dep'
                 .'&productsFilter=0111111000&start=yes';
 
-    echo "HTTP GET - " . $scrapeURL . "\n";
+    echo 'HTTP GET - '.$scrapeURL."\n";
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $scrapeURL);
