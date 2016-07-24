@@ -217,8 +217,6 @@ class simple_html_dom_node
         if (isset($this->children[$idx])) {
             return $this->children[$idx];
         }
-
-        return;
     }
 
     // returns the first child of node
@@ -227,8 +225,6 @@ class simple_html_dom_node
         if (count($this->children) > 0) {
             return $this->children[0];
         }
-
-        return;
     }
 
     // returns the last child of node
@@ -237,8 +233,6 @@ class simple_html_dom_node
         if (($count = count($this->children)) > 0) {
             return $this->children[$count - 1];
         }
-
-        return;
     }
 
     // returns the next sibling of node
@@ -644,9 +638,9 @@ class simple_html_dom_node
 
         switch ($exp) {
             case '=':
-                return ($value === $pattern);
+                return $value === $pattern;
             case '!=':
-                return ($value !== $pattern);
+                return $value !== $pattern;
             case '^=':
                 return preg_match('/^'.preg_quote($pattern, '/').'/', $value);
             case '$=':
@@ -823,7 +817,7 @@ class simple_html_dom_node
 
     public function is_utf8($string)
     {
-        return (utf8_encode(utf8_decode($string)) == $string);
+        return utf8_encode(utf8_decode($string)) == $string;
     }
 
     // camel naming conventions
@@ -831,58 +825,72 @@ class simple_html_dom_node
     {
         return $this->attr;
     }
+
     public function getAttribute($name)
     {
         return $this->__get($name);
     }
+
     public function setAttribute($name, $value)
     {
         $this->__set($name, $value);
     }
+
     public function hasAttribute($name)
     {
         return $this->__isset($name);
     }
+
     public function removeAttribute($name)
     {
         $this->__set($name, null);
     }
+
     public function getElementById($id)
     {
         return $this->find("#$id", 0);
     }
+
     public function getElementsById($id, $idx = null)
     {
         return $this->find("#$id", $idx);
     }
+
     public function getElementByTagName($name)
     {
         return $this->find($name, 0);
     }
+
     public function getElementsByTagName($name, $idx = null)
     {
         return $this->find($name, $idx);
     }
+
     public function parentNode()
     {
         return $this->parent();
     }
+
     public function childNodes($idx = -1)
     {
         return $this->children($idx);
     }
+
     public function firstChild()
     {
         return $this->first_child();
     }
+
     public function lastChild()
     {
         return $this->last_child();
     }
+
     public function nextSibling()
     {
         return $this->next_sibling();
     }
+
     public function previousSibling()
     {
         return $this->prev_sibling();
@@ -1650,10 +1658,12 @@ class simple_html_dom
     {
         return $this->root->childNodes($idx);
     }
+
     public function firstChild()
     {
         return $this->root->first_child();
     }
+
     public function lastChild()
     {
         return $this->root->last_child();
@@ -1666,6 +1676,7 @@ class simple_html_dom
     {
         return $this->find("#$id", 0);
     }
+
     public function getElementsById($id, $idx = null)
     {
         return $this->find("#$id", $idx);
@@ -1686,6 +1697,7 @@ class simple_html_dom
     {
         return $this->find($name, $idx);
     }
+
     public function loadFile()
     {
         $args = func_get_args();
