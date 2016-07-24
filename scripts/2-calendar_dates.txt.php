@@ -127,17 +127,19 @@ function getData($serverData, $date, $shortName)
                     if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
                         // route is split in two routes: we'll check both
                         // First check if this route is really driving this day (bug in NMBS website)
-                        if (drives($url)) {
+                        $html = drives($url);
+                        if ($html) {
                             // Check if this train splits by searching for other route_id
                             // If not found, this is the main train
-                            $split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
+                            $split_route_short_name = parseSplittedRoute($html); // New route_short_name of the splitted route
                             if ($split_route_short_name != null) {
                                 // E.g. IC 1528 -> IC 1628 to Blankenberge
                                 checkServiceId($split_route_short_name, $date, $VTString);
                             } else {
                                 // Check second route
-                                if (drives($next_url)) {
-                                    $split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+                                $html_next = drives($next_url);
+                                if ($html_next) {
+                                    $split_route_short_name = parseSplittedRoute($html_next); // New route_short_name of the splitted route
                                     if ($split_route_short_name != null) {
                                         // E.g. IC 1528 -> IC 1628 to Blankenberge
                                         checkServiceId($split_route_short_name, $date, $VTString);
@@ -148,8 +150,9 @@ function getData($serverData, $date, $shortName)
                             }
                         } else {
                             // Check second url
-                            if (drives($next_url)) {
-                                $split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+                            $html_next = drives($next_url);
+                            if ($html_next) {
+                                $split_route_short_name = parseSplittedRoute($html_next); // New route_short_name of the splitted route
                                 if ($split_route_short_name != null) {
                                     // E.g. IC 1528 -> IC 1628 to Blankenberge
                                     checkServiceId($split_route_short_name, $date, $VTString);
@@ -202,36 +205,19 @@ function drives($url)
 
     $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
 
-    return is_object($test);
+    if(is_object($test)) {
+        return $html;
+    } else {
+        return false;
+    }
 }
 
 /**
  * @param $url
  * @return mixed|void
  */
-function parseSplittedRoute($url)
+function parseSplittedRoute($html)
 {
-    $html = true;
-
-    while (is_bool($html)) {
-        $request_options = [
-              'timeout'   => '30',
-              'useragent' => 'iRail.be by Project iRail',
-              ];
-
-        echo 'HTTP GET - '.$url."\n";
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-        curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-        $result = curl_exec($ch);
-        curl_close($ch);
-
-        $html = str_get_html($result);
-    }
-
     $splitRouteId = getSplitTrainRouteId($html);
 
     return $splitRouteId;
@@ -409,11 +395,11 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
 }
 
 // Delete duplicates
-echo 'Calendar_dates.txt and routes_info.tmp.txt are ready!\n';
-echo 'Removing duplicates from calendar_dates.txt...\n';
+echo "Calendar_dates.txt and routes_info.tmp.txt are ready!\n";
+echo "Removing duplicates from calendar_dates.txt...\n";
 //create header in the file
 echo exec('head -n1 dist/calendar_dates.txt > dist/calendar_dates_unique.txt');
 //append the rest of the file, but only the unique lines
 echo exec('tail -n+2 dist/calendar_dates.txt | sort -u >> dist/calendar_dates_unique.txt');
 echo exec('mv dist/calendar_dates_unique.txt dist/calendar_dates.txt');
-echo 'Done.\n';
+echo "Done.\n";
