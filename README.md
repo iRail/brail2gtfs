@@ -20,18 +20,14 @@ We also have a dependency for nodejs and npm. You will need this to generate the
 
 You can configure the start_date, end_date, feed_version, language and train_types of the GTFS-files by changing config.php in your favorite editor.
 
+__By default, the $TEST variable is set to `true`, which means that you are only going to scrape 1 day. Set this to false to scrape 3 months of data__
+
 ## Generating the GTFS file
 
 There are a couple of scripts in the scripts folder. Run them in order. The scraped results will be in the dist folder.
 
 ```bash
 php scripts/*.php
-```
-
-After generating `calendar_dates.txt`, run following commands to remove duplicates from calendar_dates.txt:
-```bash
-php includes/delete-duplicates.php
-mv dist/other.txt dist/calendar_dates.txt
 ```
 
 Afterwards, go to the dist folder, and create a zip archive:
