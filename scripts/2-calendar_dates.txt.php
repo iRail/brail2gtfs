@@ -409,8 +409,11 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
 }
 
 // Delete duplicates
-echo 'Calendar_dates.txt and routes_info.tmp.txt are ready!';
-echo 'Removing duplicates from calendar_dates.txt...';
-echo exec('head -1 dist/calendar_dates.txt > dist/calendar_dates_unique.txt | tail -n+2 | sort -u >> dist/calendar_dates_unique.txt');
+echo 'Calendar_dates.txt and routes_info.tmp.txt are ready!\n';
+echo 'Removing duplicates from calendar_dates.txt...\n';
+//create header in the file
+echo exec('head -n1 dist/calendar_dates.txt > dist/calendar_dates_unique.txt');
+//append the rest of the file, but only the unique lines
+echo exec('tail -n+2 dist/calendar_dates.txt | sort -u >> dist/calendar_dates_unique.txt');
 echo exec('mv dist/calendar_dates_unique.txt dist/calendar_dates.txt');
-echo 'Done.';
+echo 'Done.\n';
