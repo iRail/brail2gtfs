@@ -139,7 +139,7 @@ function makeCorrectCalendarDates($serviceId_date_pairs)
         // get the first row, which contains the column-titles (if necessary)
         $header = fgetcsv($handleRead);
 
-        fputcsv($handleWrite, ['service_id','date','exception_type']);
+        fputcsv($handleWrite, ['service_id', 'date', 'exception_type']);
 
         // loop through the file line-by-line
         while (($line = fgetcsv($handleRead)) !== false) {

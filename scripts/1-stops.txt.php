@@ -37,7 +37,7 @@ function getStops()
 
 /**
  * Scrapes list of routes of the Belgian Rail website.
- * 
+ *
  * @param $stationId
  * @return mixed
  */
@@ -53,14 +53,13 @@ function getServerData($stationId)
     $scrapeURL = 'http://www.belgianrail.be/jpm/sncb-nmbs-routeplanner/stboard.exe/nox'
                 .'?input='.$stationId.'&date='.$currentDate.'&time='.$time.'&';
 
-    $post_data = 'maxJourneys='.$numberOfResults.'&boardType=dep'
+    $scrapeURL .= 'maxJourneys='.$numberOfResults.'&boardType=dep'
                 .'&productsFilter=0111111000&start=yes';
+
+    echo 'HTTP GET - '.$scrapeURL."\n";
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
     curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
@@ -170,7 +169,7 @@ for ($i = 0; $i < count($stops); $i++) {
     $parent_id = $stop->{'@id'};
     if (preg_match("/NMBS\/(\d+)/i", $parent_id, $matches)) {
         $stationId = $matches[1];
-        $parent_stop_id = 'stops:'.$matches[1];
+        $parent_stop_id = substr($matches[1], 2);
     }
     $parent_name = $stop->{'name'};
     $parent_lat = $stop->{'latitude'};

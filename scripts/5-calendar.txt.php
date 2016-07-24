@@ -1,13 +1,12 @@
 <?php
 
 /**
- * This script generates an empty calendar.txt file
+ * This script generates an empty calendar.txt file.
  *
  * @author Brecht Van de Vyvere <brecht@iRail.be>
  * @author Pieter Colpaert <pieter@iRail.be>
  * @license MIT
  */
-
 $file_calendar = 'dist/calendar.txt';
 
 function appendCSV($dist, $csv)

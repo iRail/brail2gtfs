@@ -1,16 +1,28 @@
 <?php
 
+$TEST = true; // set this to false to scrape full 4 month period. True means only scraping 1 day.
+
+//We're going to start scraping the first three months starting the 15th of the month this file was created on
+$startDate = mktime(0, 0, 0, date('n'), 15, date('Y')); //15th of the current month
+//4 month period, but we should generate a new GTFS every 3 months
+$endDate = strtotime('+4 months', $startDate);
+
+if ($TEST) {
+    $endDate = strtotime('+1 day', $startDate);
+}
+
+
+
 /*
-* Possible dates between 14-12-2014 and 12-12-2015
-* Possible traintypes: IC, ICE, L, P, TGV, THA, TRN and EXT
-* Possible languages: Dutch, English, French and German (currently only Dutch has been tested)
-* Always leave one language uncommented
-*/
+ * Possible traintypes: IC, ICE, L, P, TGV, THA, TRN, EXT, S*
+ * Possible languages: Dutch, English, French and German (currently only Dutch has been tested)
+ * Always leave one language uncommented
+ */
 return [
-    'start_date'   => '01-01-2015',
-    'end_date'     => '14-12-2015',
+    'start_date'   => date('d-m-Y', $startDate),
+    'end_date'     => date('d-m-Y', $endDate),
     'feed_version' => '1.0',
-    'shortNames'   => ['IC', 'ICE', 'L', 'P', 'TGV', 'THA', 'TRN', 'EXT'],
+    'shortNames'   => ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S20', 'S81', 'IC', 'ICE', 'L', 'P', 'TGV', 'THA', 'TRN', 'EXT'],
     'language'     => 'nl', // Dutch
     // 'language' => 'en' // English
     // 'language' => 'fr' // French

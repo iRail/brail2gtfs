@@ -33,32 +33,37 @@ date_default_timezone_set('UTC');
  */
 function getServerData($date, $shortName)
 {
-    $request_options = [
-            'timeout'   => '30',
-            'useragent' => 'iRail.be by Project iRail',
-            ];
+    include_once 'includes/simple_html_dom.php';
 
-    $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/nn?ld=std&AjaxMap=CPTVMap&seqnr=1&';
+    $html = true;
+    while (is_bool($html)) {
+        $request_options = [
+              'timeout'   => '30',
+              'useragent' => 'iRail.be by Project iRail',
+              ];
 
-    $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
+        $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/nn?ld=std&AjaxMap=CPTVMap&seqnr=1&';
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
+        $scrapeURL .= 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
 
-    curl_close($ch);
+        echo 'HTTP GET - '.$scrapeURL."\n";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $scrapeURL);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+        $result = curl_exec($ch);
+        curl_close($ch);
+
+        $html = str_get_html($result);
+    }
 
     return $result;
 }
 
 /**
- * Parses short_name of routes out of the HTML (e.g., "P8008")
+ * Parses short_name of routes out of the HTML (e.g., "P8008").
  *
  * @param $serverData
  * @param $date
@@ -85,7 +90,7 @@ function getData($serverData, $date, $shortName)
             if ($first) {
                 $node = array_shift($nodes);
                 $first = false;
-                $route_short_name = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr{'alt'});
+                $route_short_name = preg_replace('/\s+/', '', $node->children[0]->children[0]->children[0]->attr['alt']);
                 $destination = array_shift($node->children[2]->nodes[0]->_);
                 $VTString = array_shift($node->children[4]->nodes[0]->_);
                 $url = array_shift($node->children[0]->children[0]->{'attr'});
@@ -100,7 +105,7 @@ function getData($serverData, $date, $shortName)
             // Next node. Needed for splitted trains
             if (count($nodes) > 0) {
                 $next_node = array_shift($nodes);
-                $next_route_short_name = preg_replace('/\s+/', '', $next_node->children[0]->children[0]->children[0]->attr{'alt'});
+                $next_route_short_name = preg_replace('/\s+/', '', $next_node->children[0]->children[0]->children[0]->attr['alt']);
                 $next_destination = array_shift($next_node->children[2]->nodes[0]->{'_'});
                 $next_VTString = array_shift($next_node->children[4]->nodes[0]->{'_'});
                 $next_url = array_shift($next_node->children[0]->children[0]->{'attr'});
@@ -122,17 +127,19 @@ function getData($serverData, $date, $shortName)
                     if ($route_short_name == $next_route_short_name && $destination != $next_destination) {
                         // route is split in two routes: we'll check both
                         // First check if this route is really driving this day (bug in NMBS website)
-                        if (drives($url)) {
+                        $html = drives($url);
+                        if ($html) {
                             // Check if this train splits by searching for other route_id
                             // If not found, this is the main train
-                            $split_route_short_name = parseSplittedRoute($url); // New route_short_name of the splitted route
+                            $split_route_short_name = parseSplittedRoute($html); // New route_short_name of the splitted route
                             if ($split_route_short_name != null) {
                                 // E.g. IC 1528 -> IC 1628 to Blankenberge
                                 checkServiceId($split_route_short_name, $date, $VTString);
                             } else {
                                 // Check second route
-                                if (drives($next_url)) {
-                                    $split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+                                $html_next = drives($next_url);
+                                if ($html_next) {
+                                    $split_route_short_name = parseSplittedRoute($html_next); // New route_short_name of the splitted route
                                     if ($split_route_short_name != null) {
                                         // E.g. IC 1528 -> IC 1628 to Blankenberge
                                         checkServiceId($split_route_short_name, $date, $VTString);
@@ -143,8 +150,9 @@ function getData($serverData, $date, $shortName)
                             }
                         } else {
                             // Check second url
-                            if (drives($next_url)) {
-                                $split_route_short_name = parseSplittedRoute($next_url); // New route_short_name of the splitted route
+                            $html_next = drives($next_url);
+                            if ($html_next) {
+                                $split_route_short_name = parseSplittedRoute($html_next); // New route_short_name of the splitted route
                                 if ($split_route_short_name != null) {
                                     // E.g. IC 1528 -> IC 1628 to Blankenberge
                                     checkServiceId($split_route_short_name, $date, $VTString);
@@ -177,49 +185,39 @@ function getData($serverData, $date, $shortName)
  */
 function drives($url)
 {
-    $request_options = [
-            'timeout'   => '30',
-            'useragent' => 'iRail.be by Project iRail',
-            ];
+    $html = true;
+    while (is_bool($html)) {
+        $request_options = [
+              'timeout'   => '30',
+              'useragent' => 'iRail.be by Project iRail',
+              ];
+        echo 'HTTP GET - '.$url."\n";
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
+        curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
+        $result = curl_exec($ch);
+        curl_close($ch);
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
-    curl_close($ch);
-
-    $html = str_get_html($result);
+        $html = str_get_html($result);
+    }
 
     $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
 
-    return is_object($test);
+    if (is_object($test)) {
+        return $html;
+    } else {
+        return false;
+    }
 }
 
 /**
  * @param $url
  * @return mixed|void
-*/
-function parseSplittedRoute($url)
+ */
+function parseSplittedRoute($html)
 {
-    $request_options = [
-            'timeout'   => '30',
-            'useragent' => 'iRail.be by Project iRail',
-            ];
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
-    curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
-    $result = curl_exec($ch);
-    curl_close($ch);
-
-    $html = str_get_html($result);
-
     $splitRouteId = getSplitTrainRouteId($html);
 
     return $splitRouteId;
@@ -251,7 +249,7 @@ function getSplitTrainRouteId($html)
         }
     }
 
-    return; // No name for the splitted train
+     // No name for the splitted train
 }
 
 /**
@@ -331,7 +329,7 @@ function getServiceId($route_short_name, $VTString)
         }
     }
 
-    return; // Something went wrong
+     // Something went wrong
 }
 
 function addCalendarDate($service_id, $date, $exception_type)
@@ -397,4 +395,11 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
 }
 
 // Delete duplicates
-deleteDuplicates();
+echo "Calendar_dates.txt and routes_info.tmp.txt are ready!\n";
+echo "Removing duplicates from calendar_dates.txt...\n";
+//create header in the file
+echo exec('head -n1 dist/calendar_dates.txt > dist/calendar_dates_unique.txt');
+//append the rest of the file, but only the unique lines
+echo exec('tail -n+2 dist/calendar_dates.txt | sort -u >> dist/calendar_dates_unique.txt');
+echo exec('mv dist/calendar_dates_unique.txt dist/calendar_dates.txt');
+echo "Done.\n";
