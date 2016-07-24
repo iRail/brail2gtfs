@@ -205,7 +205,7 @@ function drives($url)
 
     $test = $html->getElementById('tq_trainroute_content_table_alteAnsicht');
 
-    if(is_object($test)) {
+    if (is_object($test)) {
         return $html;
     } else {
         return false;
