@@ -410,6 +410,7 @@ for ($date = strtotime($start_date); $date < strtotime($end_date); $date = strto
 }
 
 // Delete duplicates
-echo "Calendar_dates.txt and routes_info.tmp.txt are ready!"
-echo "Run `php includes/delete-duplicates.php` to remove duplicates from calendar_dates.txt"
-echo "Then run `mv dist/other.txt dist/calendar_dates.txt` to replace the original version."
+echo "Calendar_dates.txt and routes_info.tmp.txt are ready!";
+echo "Run `php includes/delete-duplicates.php` to remove duplicates from calendar_dates.txt";
+echo "Then run `mv dist/other.txt dist/calendar_dates.txt` to replace the original version.";
+

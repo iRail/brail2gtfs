@@ -28,5 +28,12 @@
             "name": "Brecht Van de Vyvere",
             "email": "brecht@irail.be"
         }
-    ]
+    ],
+    "scripts": {
+        "post-install-cmd": [
+            "cd vendor/irail/stations; npm install ; node bin/build.js > stations.jsonld"
+        ],
+        "posint-update-cmd" : "cd vendor/irail/stations; npm install ; node bin/build.js > stations.jsonld"
+      
+    }
 }

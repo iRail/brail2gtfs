@@ -12,15 +12,9 @@ You can download a copy at: http://gtfs.irail.be/
 
 ## Install
 
-We use the PHP package manager [composer](http://getcomposer.org). Make sure it's installed and then run from this directory:
+We use the PHP package manager [composer](http://getcomposer.org). Make sure it's installed and then run `composer install` from this directory. It's safe to run `composer update` each time you generate a new GTFS dump: the stations list is fetched over composer.
 
-```bash
-composer install
-
-cd vendor/irail/stations
-npm install
-./bin/build.js > stations.jsonld
-```
+We also have a dependency for nodejs and npm. You will need this to generate the stations file.
 
 ## Custom configuration
 

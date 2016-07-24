@@ -2,7 +2,7 @@
 
 //We're going to start scraping the first three months starting the 15th of the month this file was created on
 $startDate = mktime(0, 0, 0, date("n"), 15, date("Y")); //15th of the current month
-$endDate = strtotime("+3 months", strtotime($startDate));
+$endDate = strtotime("+3 months", $startDate);
 
 /*
  * Possible traintypes: IC, ICE, L, P, TGV, THA, TRN, EXT, S*
