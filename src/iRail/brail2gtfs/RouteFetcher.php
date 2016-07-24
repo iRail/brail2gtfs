@@ -240,9 +240,9 @@ class RouteFetcher
 
       $html = true;
       while (is_bool($html)) {
+          echo 'HTTP GET - '.$url.'\n';
           $ch = curl_init();
           curl_setopt($ch, CURLOPT_URL, $url);
-          curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
           curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
           curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
           curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
@@ -351,15 +351,13 @@ class RouteFetcher
 
       $scrapeURL = 'http://www.belgianrail.be/jp/sncb-nmbs-routeplanner/trainsearch.exe/'.$language.'ld=std&seqnr=1&ident=at.02043113.1429435556&';
 
-      $post_data = 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
+      $scrapeURL .= 'trainname='.$shortName.'&start=Zoeken&selectDate=oneday&date='.$date.'&realtimeMode=Show';
 
       $html = true;
       while (is_bool($html)) {
+          echo 'HTTP GET - '.$scrapeURL.'\n';
           $ch = curl_init();
           curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-          curl_setopt($ch, CURLOPT_POST, 1);
-          curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-          curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
           curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
           curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
           curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
@@ -385,9 +383,9 @@ class RouteFetcher
 
       $html = true;
       while (is_bool($html)) {
+          echo 'HTTP GET - '.$scrapeURL.'\n';
           $ch = curl_init();
           curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-          curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
           curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
           curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
           curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
