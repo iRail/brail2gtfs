@@ -53,14 +53,13 @@ function getServerData($stationId)
     $scrapeURL = 'http://www.belgianrail.be/jpm/sncb-nmbs-routeplanner/stboard.exe/nox'
                 .'?input='.$stationId.'&date='.$currentDate.'&time='.$time.'&';
 
-    $post_data = 'maxJourneys='.$numberOfResults.'&boardType=dep'
+    $scrapeURL .= 'maxJourneys='.$numberOfResults.'&boardType=dep'
                 .'&productsFilter=0111111000&start=yes';
+
+    echo "HTTP GET - " . $scrapeURL . "\n";
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $scrapeURL);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $request_options['timeout']);
     curl_setopt($ch, CURLOPT_USERAGENT, $request_options['useragent']);
