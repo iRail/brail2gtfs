@@ -28,7 +28,7 @@ There are a couple of scripts in the scripts folder. Run them in order. The scra
 
 ```bash
 mkdir dist
-php scripts/*.php
+./scripts/build.sh
 ```
 
 Afterwards, go to the dist folder, and create a zip archive:
