@@ -27,6 +27,7 @@ __By default, the $TEST variable is set to `true`, which means that you are only
 There are a couple of scripts in the scripts folder. Run them in order. The scraped results will be in the dist folder.
 
 ```bash
+mkdir dist
 php scripts/*.php
 ```
 
