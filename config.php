@@ -2,9 +2,9 @@
 
 $TEST = true; // set this to false to scrape full 4 month period. True means only scraping 1 day.
 
-//We're going to start scraping 
+//We're going to start scraping
 $startDate = mktime(0, 0, 0, date('n'), 1, date('Y'));
-$endDate = strtotime('+4 months', $startDate);//end date 4 months in the future
+$endDate = strtotime('+4 months', $startDate); //end date 4 months in the future
 $startDate = strtotime('-1 day', $startDate); //Take the last day of the previous month to start scraping
 
 if ($TEST) {
